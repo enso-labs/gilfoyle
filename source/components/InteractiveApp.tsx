@@ -3,7 +3,7 @@ import {Box, Text, useInput, useApp} from 'ink';
 import HomePage from './HomePage.js';
 import ModelSelection from './ModelSelection.js';
 import ApiConfig from './ApiConfig.js';
-import {getConfigManager, type GilfoyleConfig} from '../utils/config.js';
+import {getConfigManager} from '../utils/config.js';
 
 type AppState = {
 	currentView:
@@ -314,9 +314,9 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text> Reset configuration to defaults</Text>
 						<Text color="green">/api-config</Text>
 						<Text> Configure API keys for model providers</Text>
-						<Text color="gray" marginTop={1}>
-							Press ESC to return home
-						</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Press ESC to return home</Text>
+						</Box>
 					</Box>
 				);
 			case 'editor':
@@ -339,9 +339,9 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="green">✓ Checking for existing AGENTS.md...</Text>
 						<Text color="green">✓ Creating/updating configuration...</Text>
 						<Text color="cyan">AGENTS.md has been initialized!</Text>
-						<Text color="gray" marginTop={1}>
-							Press ESC to return home
-						</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Press ESC to return home</Text>
+						</Box>
 					</Box>
 				);
 			case 'compact':
@@ -353,9 +353,9 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="green">✓ Analyzing conversation history...</Text>
 						<Text color="green">✓ Removing redundant data...</Text>
 						<Text color="cyan">Session compacted successfully!</Text>
-						<Text color="gray" marginTop={1}>
-							Press ESC to return home
-						</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Press ESC to return home</Text>
+						</Box>
 					</Box>
 				);
 			case 'export':
@@ -369,9 +369,9 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="cyan">
 							Conversation exported to gilfoyle-export.md
 						</Text>
-						<Text color="gray" marginTop={1}>
-							Press ESC to return home
-						</Text>
+						<Box marginTop={1}>
+							<Text color="gray">Press ESC to return home</Text>
+						</Box>
 					</Box>
 				);
 			default:

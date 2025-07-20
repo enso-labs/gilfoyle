@@ -154,9 +154,11 @@ export default function ApiConfig({onBack}: ApiConfigProps) {
 
 			{/* Providers List */}
 			<Box flexDirection="column" marginBottom={1}>
-				<Text color="yellow" bold marginBottom={1}>
-					Providers:
-				</Text>
+				<Box marginBottom={1}>
+					<Text color="yellow" bold>
+						Providers:
+					</Text>
+				</Box>
 				{providers.map((item, index) => {
 					const isSelected = index === selectedIndex;
 					const {provider, hasKey} = item;
@@ -208,19 +210,27 @@ export default function ApiConfig({onBack}: ApiConfigProps) {
 						{selectedProvider.provider.name}
 					</Text>
 					<Text color="gray">{selectedProvider.provider.description}</Text>
-					<Text color="yellow" marginTop={1}>
-						Setup: {selectedProvider.provider.setupInstructions}
-					</Text>
-					<Text color="magenta" marginTop={1}>
-						Models: {Object.keys(selectedProvider.provider.models).join(', ')}
-					</Text>
-					<Text color="cyan" marginTop={1}>
-						NPM Package: {selectedProvider.provider.npm}
-					</Text>
-					{selectedProvider.provider.options.baseURL && (
-						<Text color="gray" marginTop={1}>
-							Endpoint: {selectedProvider.provider.options.baseURL}
+					<Box marginTop={1}>
+						<Text color="yellow">
+							Setup: {selectedProvider.provider.setupInstructions}
 						</Text>
+					</Box>
+					<Box marginTop={1}>
+						<Text color="magenta">
+							Models: {Object.keys(selectedProvider.provider.models).join(', ')}
+						</Text>
+					</Box>
+					<Box marginTop={1}>
+						<Text color="cyan">
+							NPM Package: {selectedProvider.provider.npm}
+						</Text>
+					</Box>
+					{selectedProvider.provider.options.baseURL && (
+						<Box marginTop={1}>
+							<Text color="gray">
+								Endpoint: {selectedProvider.provider.options.baseURL}
+							</Text>
+						</Box>
 					)}
 				</Box>
 			)}

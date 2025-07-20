@@ -68,7 +68,7 @@ export default function ModelSelection({
 		if (!acc[model.providerName]) {
 			acc[model.providerName] = [];
 		}
-		acc[model.providerName].push(model);
+		acc[model.providerName]!.push(model);
 		return acc;
 	}, {} as Record<string, ModelData[]>);
 
@@ -130,11 +130,7 @@ export default function ModelSelection({
 		}
 	});
 
-	const renderModelItem = (
-		model: ModelData,
-		index: number,
-		isSelected: boolean,
-	) => {
+	const renderModelItem = (model: ModelData, isSelected: boolean) => {
 		const isLocal = model.providerId === 'ollama';
 
 		return (
@@ -193,11 +189,13 @@ export default function ModelSelection({
 				{searchQuery ? (
 					// Search Results
 					<>
-						<Text color="yellow" bold marginBottom={1}>
-							Search Results ({filteredModels.length})
-						</Text>
+						<Box marginBottom={1}>
+							<Text color="yellow" bold>
+								Search Results ({filteredModels.length})
+							</Text>
+						</Box>
 						{filteredModels.map((model, index) =>
-							renderModelItem(model, index, index === selectedIndex),
+							renderModelItem(model, index === selectedIndex),
 						)}
 					</>
 				) : (
@@ -205,11 +203,13 @@ export default function ModelSelection({
 					<>
 						{/* Recent Models */}
 						<Box flexDirection="column" marginBottom={2}>
-							<Text color="yellow" bold marginBottom={1}>
-								Recent
-							</Text>
+							<Box marginBottom={1}>
+								<Text color="yellow" bold>
+									Recent
+								</Text>
+							</Box>
 							{recentModelsList.map((model, index) =>
-								renderModelItem(model, index, index === selectedIndex),
+								renderModelItem(model, index === selectedIndex),
 							)}
 						</Box>
 
@@ -269,11 +269,13 @@ export default function ModelSelection({
 						{displayModels[selectedIndex].providerId === 'ollama' && ' • Local'}
 					</Text>
 					{!displayModels[selectedIndex].available && (
-						<Text color="red" marginTop={1}>
-							⚠️ API key required for{' '}
-							{displayModels[selectedIndex].providerName}. Use /api-config to
-							set up.
-						</Text>
+						<Box marginTop={1}>
+							<Text color="red">
+								⚠️ API key required for{' '}
+								{displayModels[selectedIndex].providerName}. Use /api-config to
+								set up.
+							</Text>
+						</Box>
 					)}
 				</Box>
 			)}
