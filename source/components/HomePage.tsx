@@ -14,6 +14,11 @@ const menuOptions = [
 		description: 'Show help information',
 	},
 	{
+		key: '/chat',
+		label: 'Chat',
+		description: 'Start conversing with the AI agent',
+	},
+	{
 		key: '/editor',
 		label: 'Editor',
 		description: 'Open the editor',
@@ -26,17 +31,17 @@ const menuOptions = [
 	{
 		key: '/init',
 		label: 'Initialize',
-		description: 'Create/update AGENTS.md',
+		description: 'Initialize agent and create AGENTS.md',
 	},
 	{
 		key: '/compact',
 		label: 'Compact',
-		description: 'Compact the session',
+		description: 'Compact conversation history',
 	},
 	{
 		key: '/export',
 		label: 'Export',
-		description: 'Export conversation',
+		description: 'Export conversation to file',
 	},
 	{
 		key: '/config',

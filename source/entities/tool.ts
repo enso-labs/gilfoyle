@@ -19,6 +19,31 @@ interface MathIntent {
 	args: {expression: string};
 }
 
+interface FileSearchIntent {
+	intent: 'file_search';
+	args: {pattern: string; directory?: string};
+}
+
+interface ReadFileIntent {
+	intent: 'read_file';
+	args: {filepath: string};
+}
+
+interface CreateFileIntent {
+	intent: 'create_file';
+	args: {filepath: string; content: string};
+}
+
+interface GitStatusIntent {
+	intent: 'git_status';
+	args: Record<string, never>;
+}
+
+interface NpmInfoIntent {
+	intent: 'npm_info';
+	args: {package: string};
+}
+
 interface NoIntent {
 	intent: 'none';
 	args: Record<string, never>;
@@ -29,6 +54,11 @@ type ToolIntent =
 	| StockIntent
 	| WebSearchIntent
 	| MathIntent
+	| FileSearchIntent
+	| ReadFileIntent
+	| CreateFileIntent
+	| GitStatusIntent
+	| NpmInfoIntent
 	| NoIntent;
 
 export type {ToolIntent};

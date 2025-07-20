@@ -1,6 +1,7 @@
 import {promises as fs} from 'fs';
 import {join} from 'path';
 import {homedir} from 'os';
+import ChatModels from '../config/llm.js';
 
 export type ModelConfig = {
 	name: string;
@@ -58,7 +59,7 @@ export type GilfoyleConfig = {
 };
 
 const DEFAULT_CONFIG: GilfoyleConfig = {
-	$schema: 'https://opencode.ai/config.json',
+	$schema: 'https://gilfoyle.enso.sh/config.json',
 	mcp: {
 		playwright: {
 			type: 'remote',
@@ -78,12 +79,12 @@ const DEFAULT_CONFIG: GilfoyleConfig = {
 				baseURL: 'http://127.0.0.1:11434/v1',
 			},
 			models: {
-				qwen3: {
+				[ChatModels.OLLAMA_QWEN3]: {
 					name: 'Qwen-3 (local)',
 					description: 'Qwen 3 model running locally via Ollama',
 					enabled: true,
 				},
-				'llama3.1': {
+				[ChatModels.OLLAMA_LLAMA_3_1]: {
 					name: 'LlaMA 3.1 (local)',
 					description: 'Meta LlaMA 3.1 model running locally via Ollama',
 					enabled: true,
@@ -93,7 +94,8 @@ const DEFAULT_CONFIG: GilfoyleConfig = {
 		openai: {
 			npm: '@ai-sdk/openai',
 			name: 'OpenAI',
-			enabled: false,
+			enabled: true,
+			apiKey: '',
 			description: 'Access to GPT-4, o4-mini, Codex, and DALL-E models',
 			setupInstructions:
 				'Get your API key from https://platform.openai.com/api-keys',
@@ -101,46 +103,17 @@ const DEFAULT_CONFIG: GilfoyleConfig = {
 				baseURL: 'https://api.openai.com/v1',
 			},
 			models: {
-				'o4-mini': {
+				[ChatModels.OPENAI_GPT_4_1_NANO]: {
+					name: 'GPT-4.1 Nano',
+					description: 'Fast and efficient GPT-4.1 variant',
+				},
+				[ChatModels.OPENAI_O4_MINI]: {
 					name: 'o4-mini',
 					description: 'Fast and efficient GPT-4 variant',
 				},
-				'gpt-4': {
-					name: 'GPT-4',
+				[ChatModels.OPENAI_GPT_4o]: {
+					name: 'GPT-4o',
 					description: 'Most capable GPT model',
-				},
-				'codex-mini': {
-					name: 'Codex Mini',
-					description: 'Code generation and completion',
-				},
-				'gpt-4-vision': {
-					name: 'GPT-4 Vision',
-					description: 'Multimodal model with vision capabilities',
-				},
-			},
-		},
-		google: {
-			npm: '@ai-sdk/google',
-			name: 'Google AI',
-			enabled: false,
-			description: 'Access to Gemini 2.5 Pro, Flash, and PaLM models',
-			setupInstructions:
-				'Get your API key from https://makersuite.google.com/app/apikey',
-			options: {
-				baseURL: 'https://generativelanguage.googleapis.com/v1',
-			},
-			models: {
-				'gemini-2.5-pro-preview-06-05': {
-					name: 'Gemini 2.5 Pro Preview 06-05',
-					description: 'Advanced reasoning and long context',
-				},
-				'gemini-2.5-flash-lite-preview-06-17': {
-					name: 'Gemini 2.5 Flash Lite Preview 06-17',
-					description: 'Fast responses with good quality',
-				},
-				'gemini-1.5-pro': {
-					name: 'Gemini 1.5 Pro',
-					description: 'High-quality reasoning model',
 				},
 			},
 		},
@@ -148,6 +121,7 @@ const DEFAULT_CONFIG: GilfoyleConfig = {
 			npm: '@ai-sdk/anthropic',
 			name: 'Anthropic',
 			enabled: false,
+			apiKey: '',
 			description: 'Access to Claude Sonnet, Opus, and Haiku models',
 			setupInstructions:
 				'Get your API key from https://console.anthropic.com/account/keys',
@@ -155,25 +129,26 @@ const DEFAULT_CONFIG: GilfoyleConfig = {
 				baseURL: 'https://api.anthropic.com/v1',
 			},
 			models: {
-				'claude-sonnet': {
-					name: 'Claude Sonnet',
+				[ChatModels.ANTHROPIC_CLAUDE_4_SONNET]: {
+					name: 'Claude Sonnet 4',
 					description: 'Balanced performance and speed',
 				},
-				'claude-opus': {
-					name: 'Claude Opus',
+				[ChatModels.ANTHROPIC_CLAUDE_4_OPUS]: {
+					name: 'Claude Opus 4',
 					description: 'Most capable Claude model',
 				},
 			},
 		},
 	},
-	selectedModel: 'qwen3',
+	selectedModel: ChatModels.OPENAI_GPT_4_1_NANO,
 	recentModels: [
-		'qwen3',
-		'llama3.1',
-		'o4-mini',
-		'gemini-2.5-pro-preview-06-05',
+		ChatModels.OPENAI_GPT_4_1_NANO,
+		ChatModels.OLLAMA_QWEN3,
+		ChatModels.OLLAMA_LLAMA_3_1,
+		ChatModels.OPENAI_O4_MINI,
 	],
 	user: {
+		name: 'Developer',
 		preferences: {
 			theme: 'dark',
 			compactMode: false,

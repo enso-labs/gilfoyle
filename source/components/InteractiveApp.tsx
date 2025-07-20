@@ -4,6 +4,16 @@ import HomePage from './HomePage.js';
 import ModelSelection from './ModelSelection.js';
 import ApiConfig from './ApiConfig.js';
 import {getConfigManager} from '../utils/config.js';
+import {
+	agentLoop,
+	initializeAgent,
+	compactConversation,
+	exportConversation,
+	AgentResponse,
+} from '../utils/agent.js';
+import {ThreadState} from '../utils/memory.js';
+import {promises as fs} from 'fs';
+import ChatModels from '../config/llm.js';
 
 type AppState = {
 	currentView:
@@ -14,12 +24,18 @@ type AppState = {
 		| 'init'
 		| 'compact'
 		| 'export'
-		| 'api-config';
+		| 'api-config'
+		| 'chat';
 	input: string;
 	history: string[];
 	status: string;
 	selectedModel?: string;
 	configLoaded: boolean;
+	agentState?: ThreadState;
+	isProcessing: boolean;
+	exportProgress?: string;
+	compactProgress?: string;
+	initProgress?: string;
 };
 
 type InteractiveAppProps = {
@@ -34,8 +50,9 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		input: '',
 		history: [],
 		status: 'Loading configuration...',
-		selectedModel: 'o4-mini',
+		selectedModel: 'GPT-4.1 Nano',
 		configLoaded: false,
+		isProcessing: false,
 	});
 
 	// Load configuration on startup
@@ -51,7 +68,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 				}
 
 				// Get the display name for the selected model
-				let selectedModelName = config.selectedModel || 'qwen3';
+				let selectedModelName = config.selectedModel || ChatModels.OPENAI_GPT_4_1_NANO;
 				if (config.selectedModel) {
 					const allModels = await configManager.getAllModels();
 					const selectedModel = allModels.find(
@@ -130,12 +147,118 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						status: 'Listing Models',
 					}));
 					break;
+				case '/chat':
+					if (!state.agentState) {
+						try {
+							const newAgentState = await initializeAgent();
+							setState(prev => ({
+								...prev,
+								currentView: 'chat',
+								status: 'Chat Mode - Ready',
+								agentState: newAgentState,
+								history: [...prev.history, 'Agent initialized successfully'],
+							}));
+						} catch (error) {
+							setState(prev => ({
+								...prev,
+								status: 'Failed to initialize agent',
+								history: [
+									...prev.history,
+									`Error: ${
+										error instanceof Error ? error.message : 'Unknown error'
+									}`,
+								],
+							}));
+						}
+					} else {
+						setState(prev => ({
+							...prev,
+							currentView: 'chat',
+							status: 'Chat Mode - Ready',
+						}));
+					}
+					break;
 				case '/init':
 					setState(prev => ({
 						...prev,
 						currentView: 'init',
-						status: 'Initializing',
+						status: 'Initializing Agent',
+						isProcessing: true,
+						initProgress: 'Starting initialization...',
 					}));
+
+					try {
+						setState(prev => ({
+							...prev,
+							initProgress: 'Checking configuration...',
+						}));
+
+						const configManager = getConfigManager();
+						const config = await configManager.load();
+
+						setState(prev => ({
+							...prev,
+							initProgress: 'Initializing agent memory and system prompts...',
+						}));
+
+						const newAgentState = await initializeAgent();
+
+						setState(prev => ({
+							...prev,
+							initProgress: 'Creating AGENTS.md documentation...',
+						}));
+
+						// Create AGENTS.md file
+						const agentsContent = `# AI Agent Configuration
+
+## System Information
+- **Agent Name**: Gilfoyle
+- **Version**: ${config.version || '0.3.43'}
+- **Selected Model**: ${config.selectedModel}
+- **Initialized**: ${new Date().toISOString()}
+
+## Configuration
+- **Config File**: ${configManager.getConfigPath()}
+- **User**: ${config.user?.name || 'Developer'}
+- **Theme**: ${config.user?.preferences?.theme || 'dark'}
+
+## Available Models
+${(await configManager.getAllModels())
+	.map(m => `- ${m.config.name} (${m.providerName})`)
+	.join('\n')}
+
+## Usage
+- Use \`/chat\` to start a conversation with the agent
+- Use \`/compact\` to summarize long conversations
+- Use \`/export\` to save conversation history
+- Use \`/models\` to change the active model
+
+Agent is ready for interaction!
+`;
+
+						await fs.writeFile('AGENTS.md', agentsContent, 'utf8');
+
+						setState(prev => ({
+							...prev,
+							agentState: newAgentState,
+							isProcessing: false,
+							initProgress: 'Agent initialized successfully!',
+							status: 'Initialization Complete',
+							history: [
+								...prev.history,
+								'Agent initialized and AGENTS.md created',
+							],
+						}));
+					} catch (error) {
+						setState(prev => ({
+							...prev,
+							isProcessing: false,
+							initProgress: `Initialization failed: ${
+								error instanceof Error ? error.message : 'Unknown error'
+							}`,
+							status: 'Initialization Error',
+						}));
+					}
 					break;
 				case '/reset-config':
 					try {
@@ -143,9 +266,10 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						await configManager.reset();
 						setState(prev => ({
 							...prev,
-							selectedModel: 'Qwen-3 (local)',
+							selectedModel: 'GPT-4.1 Nano',
 							status: 'Configuration reset to defaults',
 							history: [...prev.history, 'Configuration reset to defaults'],
+							agentState: undefined, // Reset agent state
 						}));
 					} catch (error) {
 						setState(prev => ({
@@ -155,18 +279,125 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 					}
 					break;
 				case '/compact':
+					if (!state.agentState) {
+						setState(prev => ({
+							...prev,
+							status: 'No agent session to compact',
+							history: [...prev.history, 'Initialize agent first with /init'],
+						}));
+						break;
+					}
+
 					setState(prev => ({
 						...prev,
 						currentView: 'compact',
 						status: 'Compacting Session',
+						isProcessing: true,
+						compactProgress: 'Analyzing conversation history...',
 					}));
+
+					try {
+						setState(prev => ({
+							...prev,
+							compactProgress: 'Generating conversation summary...',
+						}));
+
+						const compactedState = await compactConversation(state.agentState);
+
+						setState(prev => ({
+							...prev,
+							compactProgress: 'Optimizing memory usage...',
+						}));
+
+						// Simulate a brief delay for UX
+						await new Promise(resolve => setTimeout(resolve, 1000));
+
+						setState(prev => ({
+							...prev,
+							agentState: compactedState,
+							isProcessing: false,
+							compactProgress: 'Session compacted successfully!',
+							status: 'Compaction Complete',
+							history: [
+								...prev.history,
+								`Conversation compacted: ${compactedState.thread.events.length} events processed`,
+							],
+						}));
+					} catch (error) {
+						setState(prev => ({
+							...prev,
+							isProcessing: false,
+							compactProgress: `Compaction failed: ${
+								error instanceof Error ? error.message : 'Unknown error'
+							}`,
+							status: 'Compaction Error',
+						}));
+					}
 					break;
 				case '/export':
+					if (!state.agentState) {
+						setState(prev => ({
+							...prev,
+							status: 'No agent session to export',
+							history: [...prev.history, 'Initialize agent first with /init'],
+						}));
+						break;
+					}
+
 					setState(prev => ({
 						...prev,
 						currentView: 'export',
-						status: 'Exporting',
+						status: 'Exporting Conversation',
+						isProcessing: true,
+						exportProgress: 'Preparing conversation data...',
 					}));
+
+					try {
+						setState(prev => ({
+							...prev,
+							exportProgress: 'Formatting conversation history...',
+						}));
+
+						const configManager = getConfigManager();
+						const config = await configManager.load();
+						const exportFormat = config.export?.format || 'markdown';
+
+						const exportContent = await exportConversation(
+							state.agentState,
+							exportFormat,
+						);
+
+						setState(prev => ({
+							...prev,
+							exportProgress: 'Saving to file...',
+						}));
+
+						const filename = `gilfoyle-export-${new Date()
+							.toISOString()
+							.slice(0, 19)
+							.replace(/:/g, '-')}.${exportFormat}`;
+						await fs.writeFile(filename, exportContent, 'utf8');
+
+						setState(prev => ({
+							...prev,
+							isProcessing: false,
+							exportProgress: `Exported to ${filename}`,
+							status: 'Export Complete',
+							history: [
+								...prev.history,
+								`Conversation exported to ${filename}`,
+							],
+						}));
+					} catch (error) {
+						setState(prev => ({
+							...prev,
+							isProcessing: false,
+							exportProgress: `Export failed: ${
+								error instanceof Error ? error.message : 'Unknown error'
+							}`,
+							status: 'Export Error',
+						}));
+					}
 					break;
 				case '/home':
 				case 'home':
@@ -190,22 +421,69 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 					}));
 					break;
 				default:
-					setState(prev => ({
-						...prev,
-						history: [
-							...prev.history,
-							`Unknown command: ${command}. Type /help for available commands.`,
-						],
-						status: 'Error',
-					}));
+					// Handle agent conversation
+					if (state.currentView === 'chat' && state.agentState) {
+						setState(prev => ({
+							...prev,
+							isProcessing: true,
+							status: 'Processing...',
+						}));
+
+						try {
+							const response: AgentResponse = await agentLoop(
+								command,
+								state.agentState,
+							);
+
+							setState(prev => ({
+								...prev,
+								agentState: response.state,
+								isProcessing: false,
+								status: 'Chat Mode - Ready',
+								history: [
+									...prev.history,
+									`Assistant: ${response.content}`,
+									...(response.toolsUsed.length > 0
+										? [`Tools used: ${response.toolsUsed.join(', ')}`]
+										: []),
+								],
+							}));
+						} catch (error) {
+							setState(prev => ({
+								...prev,
+								isProcessing: false,
+								status: 'Chat Error',
+								history: [
+									...prev.history,
+									`Error: ${
+										error instanceof Error ? error.message : 'Unknown error'
+									}`,
+								],
+							}));
+						}
+					} else {
+						setState(prev => ({
+							...prev,
+							history: [
+								...prev.history,
+								`Unknown command: ${command}. Type /help for available commands.`,
+							],
+							status: 'Error',
+						}));
+					}
 			}
 		},
-		[exit],
+		[exit, state.agentState],
 	);
 
 	useInput((input, key) => {
 		// Only handle input when not in specialized views
 		if (state.currentView === 'models' || state.currentView === 'api-config') {
+			return;
+		}
+
+		// Prevent input during processing
+		if (state.isProcessing && key.return) {
 			return;
 		}
 
@@ -238,11 +516,13 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 			return;
 		}
 
-		// Regular character input
-		setState(prev => ({
-			...prev,
-			input: prev.input + input,
-		}));
+		// Regular character input (but not during processing)
+		if (!state.isProcessing) {
+			setState(prev => ({
+				...prev,
+				input: prev.input + input,
+			}));
+		}
 	});
 
 	const handleModelSelect = useCallback(async (model: any) => {
@@ -292,16 +572,18 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						</Text>
 						<Text color="green">/help</Text>
 						<Text> Show this help message</Text>
+						<Text color="green">/chat</Text>
+						<Text> Start conversing with the AI agent</Text>
 						<Text color="green">/editor</Text>
 						<Text> Open the text editor</Text>
 						<Text color="green">/models</Text>
 						<Text> List available AI models</Text>
 						<Text color="green">/init</Text>
-						<Text> Initialize or update AGENTS.md file</Text>
+						<Text> Initialize agent and create AGENTS.md</Text>
 						<Text color="green">/compact</Text>
-						<Text> Compact the current session</Text>
+						<Text> Compact and summarize conversation history</Text>
 						<Text color="green">/export</Text>
-						<Text> Export conversation history</Text>
+						<Text> Export conversation to file</Text>
 						<Text color="green">/home</Text>
 						<Text> Return to home screen</Text>
 						<Text color="green">clear</Text>
@@ -329,16 +611,50 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="gray">Press ESC to return home</Text>
 					</Box>
 				);
-
+			case 'chat':
+				return (
+					<Box flexDirection="column" marginY={1}>
+						<Text color="yellow" bold>
+							Chat with Agent
+						</Text>
+						{state.agentState && (
+							<Box marginY={1}>
+								<Text color="cyan">
+									Agent ready! Type your message below and press Enter.
+								</Text>
+								<Text color="gray" dimColor>
+									Token usage: {state.agentState.thread.usage.total_tokens}{' '}
+									total
+								</Text>
+							</Box>
+						)}
+						{state.isProcessing && (
+							<Box marginY={1}>
+								<Text color="yellow">🤖 Agent is thinking...</Text>
+							</Box>
+						)}
+						<Box marginTop={1}>
+							<Text color="gray">Press ESC to return home</Text>
+						</Box>
+					</Box>
+				);
 			case 'init':
 				return (
 					<Box flexDirection="column" marginY={1}>
 						<Text color="yellow" bold>
-							Initialize AGENTS.md
+							Initialize Agent
 						</Text>
-						<Text color="green">✓ Checking for existing AGENTS.md...</Text>
-						<Text color="green">✓ Creating/updating configuration...</Text>
-						<Text color="cyan">AGENTS.md has been initialized!</Text>
+						{state.isProcessing ? (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="cyan">{state.initProgress}</Text>
+								<Text color="yellow">⏳ Processing...</Text>
+							</Box>
+						) : (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="green">✓ {state.initProgress}</Text>
+								<Text color="cyan">Agent is ready for use!</Text>
+							</Box>
+						)}
 						<Box marginTop={1}>
 							<Text color="gray">Press ESC to return home</Text>
 						</Box>
@@ -350,9 +666,17 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="yellow" bold>
 							Compacting Session
 						</Text>
-						<Text color="green">✓ Analyzing conversation history...</Text>
-						<Text color="green">✓ Removing redundant data...</Text>
-						<Text color="cyan">Session compacted successfully!</Text>
+						{state.isProcessing ? (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="cyan">{state.compactProgress}</Text>
+								<Text color="yellow">⏳ Processing...</Text>
+							</Box>
+						) : (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="green">✓ {state.compactProgress}</Text>
+								<Text color="cyan">Memory has been optimized!</Text>
+							</Box>
+						)}
 						<Box marginTop={1}>
 							<Text color="gray">Press ESC to return home</Text>
 						</Box>
@@ -364,11 +688,17 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="yellow" bold>
 							Export Conversation
 						</Text>
-						<Text color="green">✓ Preparing conversation data...</Text>
-						<Text color="green">✓ Formatting output...</Text>
-						<Text color="cyan">
-							Conversation exported to gilfoyle-export.md
-						</Text>
+						{state.isProcessing ? (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="cyan">{state.exportProgress}</Text>
+								<Text color="yellow">⏳ Processing...</Text>
+							</Box>
+						) : (
+							<Box flexDirection="column" marginY={1}>
+								<Text color="green">✓ {state.exportProgress}</Text>
+								<Text color="cyan">Export completed successfully!</Text>
+							</Box>
+						)}
 						<Box marginTop={1}>
 							<Text color="gray">Press ESC to return home</Text>
 						</Box>
