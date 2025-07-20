@@ -42,12 +42,7 @@
 			"program": "${workspaceFolder}/dist/cli.js",
 			"args": [],
 			"console": "integratedTerminal",
-			"skipFiles": ["<node_internals>/**"],
-			"preLaunchTask": {
-				"type": "shell",
-				"command": "npm run build",
-				"group": "build"
-			}
+			"skipFiles": ["<node_internals>/**"]
 		}
 	]
 }
