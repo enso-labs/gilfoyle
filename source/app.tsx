@@ -1,14 +1,9 @@
-import {Text} from 'ink';
+import InteractiveApp from './components/InteractiveApp.js';
 
 type Props = {
 	name: string | undefined;
 };
 
-export default function App({name = 'Stranger'}: Props) {
-	console.debug('App');
-	return (
-		<Text>
-			Hello, <Text color="green">{name}</Text>
-		</Text>
-	);
+export default function App({name}: Props) {
+	return <InteractiveApp name={name} version="0.3.43" />;
 }
