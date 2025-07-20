@@ -10,7 +10,7 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"debug": "node --import tsx source/cli.tsx",
+		"debug": "node --import tsx src/cli.tsx",
 		"test": "npm run format:check && ava",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
