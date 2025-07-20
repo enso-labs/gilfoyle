@@ -1,12 +1,14 @@
 import {useState, useCallback} from 'react';
 import {Box, Text, useInput, useApp} from 'ink';
 import HomePage from './HomePage.js';
+import ModelSelection from './ModelSelection.js';
 
 type AppState = {
 	currentView: 'home' | 'help' | 'editor' | 'models' | 'init' | 'compact' | 'export';
 	input: string;
 	history: string[];
 	status: string;
+	selectedModel?: string;
 };
 
 type InteractiveAppProps = {
@@ -21,6 +23,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		input: '',
 		history: [],
 		status: 'Ready',
+		selectedModel: 'o4-mini',
 	});
 
 	const handleCommand = useCallback((command: string) => {
@@ -106,6 +109,11 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 	}, [exit]);
 
 	useInput((input, key) => {
+		// Only handle input when not in model selection view
+		if (state.currentView === 'models') {
+			return;
+		}
+
 		if (key.ctrl && input === 'c') {
 			exit();
 			return;
@@ -142,8 +150,33 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		}));
 	});
 
+	const handleModelSelect = useCallback((model: any) => {
+		setState(prev => ({
+			...prev,
+			selectedModel: model.name,
+			currentView: 'home',
+			status: `Model changed to ${model.name}`,
+			history: [...prev.history, `Selected model: ${model.name}`],
+		}));
+	}, []);
+
+	const handleBackToHome = useCallback(() => {
+		setState(prev => ({
+			...prev,
+			currentView: 'home',
+			status: 'Ready',
+		}));
+	}, []);
+
 	const renderCurrentView = () => {
 		switch (state.currentView) {
+			case 'models':
+				return (
+					<ModelSelection 
+						onSelect={handleModelSelect}
+						onBack={handleBackToHome}
+					/>
+				);
 			case 'help':
 				return (
 					<Box flexDirection="column" marginY={1}>
@@ -177,16 +210,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						<Text color="gray">Press ESC to return home</Text>
 					</Box>
 				);
-			case 'models':
-				return (
-					<Box flexDirection="column" marginY={1}>
-						<Text color="yellow" bold>Available Models:</Text>
-						<Text color="green">• OpenAI o4-mini</Text>
-						<Text color="green">• Claude Sonnet</Text>
-						<Text color="green">• GPT-4</Text>
-						<Text color="gray" marginTop={1}>Press ESC to return home</Text>
-					</Box>
-				);
+
 			case 'init':
 				return (
 					<Box flexDirection="column" marginY={1}>
@@ -226,31 +250,36 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		<Box flexDirection="column">
 			{renderCurrentView()}
 			
-			{/* Command History */}
-			{state.history.length > 0 && (
-				<Box flexDirection="column" marginY={1}>
-					<Text color="gray" bold>Command History:</Text>
-					<Box flexDirection="column" marginLeft={1}>
-						{state.history.slice(-5).map((item, index) => (
-							<Text key={index} color="gray" dimColor>
-								{item}
-							</Text>
-						))}
-					</Box>
-				</Box>
-			)}
+			{/* Only show command history and input when not in models view */}
+			{state.currentView !== 'models' && (
+				<>
+					{/* Command History */}
+					{state.history.length > 0 && (
+						<Box flexDirection="column" marginY={1}>
+							<Text color="gray" bold>Command History:</Text>
+							<Box flexDirection="column" marginLeft={1}>
+								{state.history.slice(-5).map((item, index) => (
+									<Text key={index} color="gray" dimColor>
+										{item}
+									</Text>
+								))}
+							</Box>
+						</Box>
+					)}
 
-			{/* Input Section */}
-			<Box 
-				borderStyle="round" 
-				borderColor="cyan" 
-				paddingX={1}
-				marginY={1}
-			>
-				<Text color="cyan">$ </Text>
-				<Text>{state.input}</Text>
-				<Text color="gray">_</Text>
-			</Box>
+					{/* Input Section */}
+					<Box 
+						borderStyle="round" 
+						borderColor="cyan" 
+						paddingX={1}
+						marginY={1}
+					>
+						<Text color="cyan">$ </Text>
+						<Text>{state.input}</Text>
+						<Text color="gray">_</Text>
+					</Box>
+				</>
+			)}
 
 			{/* Status Bar */}
 			<Box
@@ -263,6 +292,10 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 				<Box>
 					<Text color="blue">Status: </Text>
 					<Text color="green">{state.status}</Text>
+				</Box>
+				<Box>
+					<Text color="blue">Model: </Text>
+					<Text color="cyan">{state.selectedModel}</Text>
 				</Box>
 				{name && (
 					<Box>
