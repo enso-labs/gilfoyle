@@ -13,7 +13,6 @@
 			"name": "Ollama (local)",
 			"enabled": true,
 			"description": "Run models locally using Ollama. No API key required.",
-			"setupInstructions": "Install Ollama from https://ollama.ai and run 'ollama serve'",
 			"options": {
 				"baseURL": "http://127.0.0.1:11434/v1"
 			},
