@@ -38,16 +38,33 @@ const menuOptions = [
 		label: 'Export',
 		description: 'Export conversation',
 	},
+	{
+		key: '/config',
+		label: 'Config',
+		description: 'Show configuration info',
+	},
+	{
+		key: '/api-config',
+		label: 'API Config',
+		description: 'Configure API keys for providers',
+	},
 ];
 
 export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Header title="Gilfoyle" version={version} />
-			
+
 			<Box marginBottom={1}>
 				<Text color="cyan">
-					Welcome{name ? `, ${name}` : ''}! This is your AI development assistant.
+					Welcome{name ? `, ${name}` : ''}! This is your AI development
+					assistant.
+				</Text>
+			</Box>
+
+			<Box marginBottom={1}>
+				<Text color="gray" dimColor>
+					Configuration: ~/.config/gilfoyle/gilfoyle.json (OpenCode AI Schema)
 				</Text>
 			</Box>
 
@@ -60,4 +77,4 @@ export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 			</Box>
 		</Box>
 	);
-} 
+}

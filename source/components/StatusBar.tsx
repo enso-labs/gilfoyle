@@ -26,4 +26,4 @@ export default function StatusBar({user, status = 'Ready'}: StatusBarProps) {
 			)}
 		</Box>
 	);
-} 
+}

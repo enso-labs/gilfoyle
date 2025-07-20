@@ -1,0 +1,93 @@
+{
+	"$schema": "https://gilfoyle.enso.sh/config.json",
+	"mcp": {
+		"playwright": {
+			"type": "remote",
+			"url": "http://localhost:8931/sse",
+			"enabled": true
+		}
+	},
+	"provider": {
+		"ollama": {
+			"npm": "@ai-sdk/openai-compatible",
+			"name": "Ollama (local)",
+			"enabled": true,
+			"description": "Run models locally using Ollama. No API key required.",
+			"setupInstructions": "Install Ollama from https://ollama.ai and run 'ollama serve'",
+			"options": {
+				"baseURL": "http://127.0.0.1:11434/v1"
+			},
+			"models": {
+				"qwen3": {
+					"name": "Qwen-3 (local)",
+					"description": "Qwen 3 model running locally via Ollama",
+					"enabled": true
+				},
+				"llama3.1": {
+					"name": "LlaMA 3.1 (local)",
+					"description": "Meta LlaMA 3.1 model running locally via Ollama",
+					"enabled": true
+				}
+			}
+		},
+		"openai": {
+			"apiKey": "sk-proj-1234567890",
+			"models": {
+				"o4-mini": {
+					"name": "o4-mini",
+					"description": "Fast and efficient GPT-4 variant"
+				},
+				"gpt-4": {
+					"name": "GPT-4",
+					"description": "Most capable GPT model"
+				},
+				"codex-mini": {
+					"name": "Codex Mini",
+					"description": "Code generation and completion"
+				},
+				"gpt-4-vision": {
+					"name": "GPT-4 Vision",
+					"description": "Multimodal model with vision capabilities"
+				}
+			}
+		},
+		"anthropic": {
+			"apiKey": "sk-proj-1234567890",
+			"models": {
+				"claude-sonnet": {
+					"name": "Claude Sonnet",
+					"description": "Balanced performance and speed"
+				},
+				"claude-opus": {
+					"name": "Claude Opus",
+					"description": "Most capable Claude model"
+				}
+			}
+		}
+	},
+	"selectedModel": "qwen3",
+	"recentModels": [
+		"qwen3",
+		"llama3.1",
+		"o4-mini",
+		"gemini-2.5-pro-preview-06-05"
+	],
+	"user": {
+		"name": "Developer",
+		"preferences": {
+			"theme": "dark",
+			"compactMode": false
+		}
+	},
+	"editor": {
+		"fontSize": 14,
+		"wordWrap": true,
+		"tabSize": 2
+	},
+	"export": {
+		"format": "markdown",
+		"includeTimestamps": true
+	},
+	"lastUpdated": "2024-01-01T00:00:00.000Z",
+	"version": "0.3.43"
+}

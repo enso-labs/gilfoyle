@@ -24,4 +24,4 @@ export default function Header({title, version}: HeaderProps) {
 			</Box>
 		</Box>
 	);
-} 
+}

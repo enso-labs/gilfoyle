@@ -28,4 +28,4 @@ export default function Navigation({options}: NavigationProps) {
 			</Box>
 		</Box>
 	);
-} 
+}
