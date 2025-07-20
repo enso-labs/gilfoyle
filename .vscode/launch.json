@@ -39,7 +39,7 @@
 			"name": "Debug Built CLI",
 			"type": "node",
 			"request": "launch",
-			"program": "${workspaceFolder}/dist/cli.js",
+			"program": "npm run build && node ${workspaceFolder}/dist/cli.js",
 			"args": [],
 			"console": "integratedTerminal",
 			"skipFiles": ["<node_internals>/**"]
