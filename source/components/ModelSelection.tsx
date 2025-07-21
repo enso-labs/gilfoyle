@@ -1,131 +1,78 @@
 import {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
+import {getConfigManager} from '../utils/config.js';
 
-type Model = {
+type ModelData = {
 	id: string;
-	name: string;
-	provider: 'OpenAI' | 'Google' | 'Anthropic' | 'Ollama' | 'Meta';
-	type: 'chat' | 'code' | 'vision' | 'embedding';
-	local?: boolean;
-	description?: string;
+	config: {
+		name: string;
+		description?: string;
+		enabled?: boolean;
+	};
+	providerId: string;
+	providerName: string;
+	available: boolean;
 };
 
 type ModelSelectionProps = {
-	onSelect: (model: Model) => void;
+	onSelect: (model: ModelData) => void;
 	onBack: () => void;
 };
 
-const ALL_MODELS: Model[] = [
-	// OpenAI Models
-	{
-		id: 'o4-mini',
-		name: 'o4-mini',
-		provider: 'OpenAI',
-		type: 'chat',
-		description: 'Fast and efficient GPT-4 variant'
-	},
-	{
-		id: 'gpt-4',
-		name: 'GPT-4',
-		provider: 'OpenAI',
-		type: 'chat',
-		description: 'Most capable GPT model'
-	},
-	{
-		id: 'codex-mini',
-		name: 'Codex Mini',
-		provider: 'OpenAI',
-		type: 'code',
-		description: 'Code generation and completion'
-	},
-	{
-		id: 'gpt-4-vision',
-		name: 'GPT-4 Vision',
-		provider: 'OpenAI',
-		type: 'vision',
-		description: 'Multimodal model with vision capabilities'
-	},
-	
-	// Google Models
-	{
-		id: 'gemini-2.5-pro-preview-06-05',
-		name: 'Gemini 2.5 Pro Preview 06-05',
-		provider: 'Google',
-		type: 'chat',
-		description: 'Advanced reasoning and long context'
-	},
-	{
-		id: 'gemini-2.5-flash-lite-preview-06-17',
-		name: 'Gemini 2.5 Flash Lite Preview 06-17',
-		provider: 'Google',
-		type: 'chat',
-		description: 'Fast responses with good quality'
-	},
-	{
-		id: 'gemini-1.5-pro',
-		name: 'Gemini 1.5 Pro',
-		provider: 'Google',
-		type: 'chat',
-		description: 'High-quality reasoning model'
-	},
-	
-	// Anthropic Models
-	{
-		id: 'claude-sonnet',
-		name: 'Claude Sonnet',
-		provider: 'Anthropic',
-		type: 'chat',
-		description: 'Balanced performance and speed'
-	},
-	{
-		id: 'claude-opus',
-		name: 'Claude Opus',
-		provider: 'Anthropic',
-		type: 'chat',
-		description: 'Most capable Claude model'
-	},
-	
-	// Meta Models
-	{
-		id: 'llama-3.1-local',
-		name: 'LLaMA 3.1 (local)',
-		provider: 'Ollama',
-		type: 'chat',
-		local: true,
-		description: 'Local inference with Ollama'
-	},
-	{
-		id: 'llama-3.1-70b',
-		name: 'LLaMA 3.1 70B',
-		provider: 'Meta',
-		type: 'chat',
-		description: 'Large language model by Meta'
-	},
-];
-
-const RECENT_MODELS = ['o4-mini', 'gemini-2.5-pro-preview-06-05', 'codex-mini', 'gemini-2.5-flash-lite-preview-06-17', 'llama-3.1-local'];
-
-export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) {
+export default function ModelSelection({
+	onSelect,
+	onBack,
+}: ModelSelectionProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [isSearching, setIsSearching] = useState(false);
+	const [allModels, setAllModels] = useState<ModelData[]>([]);
+	const [recentModels, setRecentModels] = useState<string[]>([]);
+	const [loading, setLoading] = useState(true);
 
-	const filteredModels = ALL_MODELS.filter(model => 
-		model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-		model.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-		model.description?.toLowerCase().includes(searchQuery.toLowerCase())
+	// Load models and config data
+	useEffect(() => {
+		const loadData = async () => {
+			try {
+				const configManager = getConfigManager();
+				const config = await configManager.load();
+				const models = await configManager.getAllModels();
+
+				setAllModels(models);
+				setRecentModels(config.recentModels || []);
+			} catch (error) {
+				console.error('Error loading models:', error);
+				setAllModels([]);
+				setRecentModels([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		loadData();
+	}, []);
+
+	const filteredModels = allModels.filter(
+		model =>
+			model.config.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			model.providerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			model.config.description
+				?.toLowerCase()
+				.includes(searchQuery.toLowerCase()),
 	);
 
-	const recentModels = ALL_MODELS.filter(model => RECENT_MODELS.includes(model.id));
-	const modelsByProvider = ALL_MODELS.reduce((acc, model) => {
-		if (!acc[model.provider]) {
-			acc[model.provider] = [];
+	const recentModelsList = allModels.filter(model =>
+		recentModels.includes(model.id),
+	);
+	const modelsByProvider = allModels.reduce((acc, model) => {
+		if (!acc[model.providerName]) {
+			acc[model.providerName] = [];
 		}
-		acc[model.provider].push(model);
+		acc[model.providerName]!.push(model);
 		return acc;
-	}, {} as Record<string, Model[]>);
+	}, {} as Record<string, ModelData[]>);
 
-	const displayModels = searchQuery ? filteredModels : recentModels;
+	const displayModels = searchQuery ? filteredModels : recentModelsList;
 	const maxIndex = displayModels.length - 1;
 
 	useEffect(() => {
@@ -151,7 +98,10 @@ export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) 
 				return;
 			}
 			if (displayModels[selectedIndex]) {
-				onSelect(displayModels[selectedIndex]);
+				const selectedModel = displayModels[selectedIndex];
+				if (selectedModel.available) {
+					onSelect(selectedModel);
+				}
 			}
 			return;
 		}
@@ -180,29 +130,49 @@ export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) 
 		}
 	});
 
-	const renderModelItem = (model: Model, index: number, isSelected: boolean) => (
-		<Box key={model.id} marginLeft={2}>
-			<Text color={isSelected ? 'cyan' : 'white'} backgroundColor={isSelected ? 'blue' : undefined}>
-				{isSelected ? '> ' : '  '}
-				<Text bold>{model.name}</Text>
-				{' '}
-				<Text color="gray">{model.provider}</Text>
-				{model.local && <Text color="yellow"> (local)</Text>}
-			</Text>
-		</Box>
-	);
+	const renderModelItem = (model: ModelData, isSelected: boolean) => {
+		const isLocal = model.providerId === 'ollama';
+
+		return (
+			<Box key={model.id} marginLeft={2}>
+				<Text
+					color={isSelected ? 'cyan' : 'white'}
+					backgroundColor={isSelected ? 'blue' : undefined}
+				>
+					{isSelected ? '> ' : '  '}
+					<Text bold color={model.available ? undefined : 'gray'}>
+						{model.config.name}
+					</Text>{' '}
+					<Text color="gray">{model.providerName}</Text>
+					{isLocal && <Text color="yellow"> (local)</Text>}
+					{!model.available && <Text color="red"> [API Key Required]</Text>}
+					{model.available && <Text color="green"> ✓</Text>}
+				</Text>
+			</Box>
+		);
+	};
+
+	if (loading) {
+		return (
+			<Box flexDirection="column" padding={1}>
+				<Text color="cyan">Loading models...</Text>
+			</Box>
+		);
+	}
 
 	return (
 		<Box flexDirection="column" padding={1}>
 			{/* Header */}
 			<Box justifyContent="space-between" marginBottom={1}>
-				<Text color="cyan" bold>Select Model</Text>
+				<Text color="cyan" bold>
+					Select Model
+				</Text>
 				<Text color="gray">esc</Text>
 			</Box>
 
 			{/* Search Box */}
-			<Box 
-				borderStyle="round" 
+			<Box
+				borderStyle="round"
 				borderColor={isSearching ? 'cyan' : 'gray'}
 				paddingX={1}
 				marginBottom={1}
@@ -219,11 +189,13 @@ export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) 
 				{searchQuery ? (
 					// Search Results
 					<>
-						<Text color="yellow" bold marginBottom={1}>
-							Search Results ({filteredModels.length})
-						</Text>
-						{filteredModels.map((model, index) => 
-							renderModelItem(model, index, index === selectedIndex)
+						<Box marginBottom={1}>
+							<Text color="yellow" bold>
+								Search Results ({filteredModels.length})
+							</Text>
+						</Box>
+						{filteredModels.map((model, index) =>
+							renderModelItem(model, index === selectedIndex),
 						)}
 					</>
 				) : (
@@ -231,21 +203,33 @@ export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) 
 					<>
 						{/* Recent Models */}
 						<Box flexDirection="column" marginBottom={2}>
-							<Text color="yellow" bold marginBottom={1}>Recent</Text>
-							{recentModels.map((model, index) => 
-								renderModelItem(model, index, index === selectedIndex)
+							<Box marginBottom={1}>
+								<Text color="yellow" bold>
+									Recent
+								</Text>
+							</Box>
+							{recentModelsList.map((model, index) =>
+								renderModelItem(model, index === selectedIndex),
 							)}
 						</Box>
 
 						{/* Models by Provider */}
 						{Object.entries(modelsByProvider).map(([provider, models]) => (
 							<Box key={provider} flexDirection="column" marginBottom={1}>
-								<Text color="yellow" bold>{provider}</Text>
+								<Text color="yellow" bold>
+									{provider}
+								</Text>
 								{models.map(model => (
 									<Box key={model.id} marginLeft={2}>
 										<Text color="gray">
-											{model.name}
-											{model.local && <Text color="yellow"> (local)</Text>}
+											{model.config.name}
+											{model.providerId === 'ollama' && (
+												<Text color="yellow"> (local)</Text>
+											)}
+											{model.available && <Text color="green"> ✓</Text>}
+											{!model.available && (
+												<Text color="red"> [Needs API Key]</Text>
+											)}
 										</Text>
 									</Box>
 								))}
@@ -258,31 +242,43 @@ export default function ModelSelection({onSelect, onBack}: ModelSelectionProps) 
 			{/* Footer Instructions */}
 			<Box marginTop={1} borderStyle="round" borderColor="gray" paddingX={1}>
 				<Text color="gray" dimColor>
-					↑/↓ Navigate • Enter Select • S Search • ESC {isSearching ? 'Cancel' : 'Back'}
+					↑/↓ Navigate • Enter Select • S Search • ESC{' '}
+					{isSearching ? 'Cancel' : 'Back'} • Configure API keys for unavailable
+					models
 				</Text>
 			</Box>
 
 			{/* Selected Model Info */}
 			{displayModels[selectedIndex] && (
-				<Box 
-					marginTop={1} 
-					borderStyle="round" 
-					borderColor="blue" 
+				<Box
+					marginTop={1}
+					borderStyle="round"
+					borderColor="blue"
 					paddingX={1}
 					flexDirection="column"
 				>
 					<Text color="cyan" bold>
-						{displayModels[selectedIndex].name}
+						{displayModels[selectedIndex].config.name}
 					</Text>
 					<Text color="gray">
-						{displayModels[selectedIndex].description || 'No description available'}
+						{displayModels[selectedIndex].config.description ||
+							'No description available'}
 					</Text>
 					<Text color="yellow">
-						Provider: {displayModels[selectedIndex].provider}
-						{displayModels[selectedIndex].local && ' • Local'}
+						Provider: {displayModels[selectedIndex].providerName}
+						{displayModels[selectedIndex].providerId === 'ollama' && ' • Local'}
 					</Text>
+					{!displayModels[selectedIndex].available && (
+						<Box marginTop={1}>
+							<Text color="red">
+								⚠️ API key required for{' '}
+								{displayModels[selectedIndex].providerName}. Use /api-config to
+								set up.
+							</Text>
+						</Box>
+					)}
 				</Box>
 			)}
 		</Box>
 	);
-} 
+}

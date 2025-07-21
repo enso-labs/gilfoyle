@@ -14,6 +14,11 @@ const menuOptions = [
 		description: 'Show help information',
 	},
 	{
+		key: '/chat',
+		label: 'Chat',
+		description: 'Start conversing with the AI agent',
+	},
+	{
 		key: '/editor',
 		label: 'Editor',
 		description: 'Open the editor',
@@ -26,17 +31,27 @@ const menuOptions = [
 	{
 		key: '/init',
 		label: 'Initialize',
-		description: 'Create/update AGENTS.md',
+		description: 'Initialize agent and create AGENTS.md',
 	},
 	{
 		key: '/compact',
 		label: 'Compact',
-		description: 'Compact the session',
+		description: 'Compact conversation history',
 	},
 	{
 		key: '/export',
 		label: 'Export',
-		description: 'Export conversation',
+		description: 'Export conversation to file',
+	},
+	{
+		key: '/config',
+		label: 'Config',
+		description: 'Show configuration info',
+	},
+	{
+		key: '/api-config',
+		label: 'API Config',
+		description: 'Configure API keys for providers',
 	},
 ];
 
@@ -44,10 +59,17 @@ export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Header title="Gilfoyle" version={version} />
-			
+
 			<Box marginBottom={1}>
 				<Text color="cyan">
-					Welcome{name ? `, ${name}` : ''}! This is your AI development assistant.
+					Welcome{name ? `, ${name}` : ''}! This is your AI development
+					assistant.
+				</Text>
+			</Box>
+
+			<Box marginBottom={1}>
+				<Text color="gray" dimColor>
+					Configuration: ~/.config/gilfoyle/gilfoyle.json (OpenCode AI Schema)
 				</Text>
 			</Box>
 
@@ -60,4 +82,4 @@ export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 			</Box>
 		</Box>
 	);
-} 
+}

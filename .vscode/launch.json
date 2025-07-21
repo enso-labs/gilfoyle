@@ -42,7 +42,8 @@
 			"program": "${workspaceFolder}/dist/cli.js",
 			"args": [],
 			"console": "integratedTerminal",
-			"skipFiles": ["<node_internals>/**"]
+			"skipFiles": ["<node_internals>/**"],
+			"preLaunchTask": "npm: build"
 		}
 	]
 }

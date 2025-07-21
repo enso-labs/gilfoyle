@@ -1,4 +1,7 @@
 import InteractiveApp from './components/InteractiveApp.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 type Props = {
 	name: string | undefined;
