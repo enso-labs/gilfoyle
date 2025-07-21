@@ -11,11 +11,7 @@ export type ThreadState = {
 			intent: string;
 			content: string;
 			args?: any;
-			metadata?: {
-				type?: string;
-				status?: string;
-				done?: string;
-			};
+			metadata: any;
 		}[];
 	};
 };
@@ -95,10 +91,15 @@ export function convertStateToXML(state: ThreadState): string {
 	const events = state.thread.events
 		.map(event => {
 			const attrs = [`intent="${event.intent}"`];
-			if (event.metadata?.type) attrs.push(`type="${event.metadata.type}"`);
-			if (event.metadata?.status)
-				attrs.push(`status="${event.metadata.status}"`);
-			if (event.metadata?.done) attrs.push(`done="${event.metadata.done}"`);
+			
+			// Add all metadata properties as attributes
+			if (event.metadata) {
+				Object.entries(event.metadata).forEach(([key, value]) => {
+					if (value !== undefined && value !== null) {
+						attrs.push(`${key}="${value}"`);
+					}
+				});
+			}
 
 			return `<event ${attrs.join(' ')}>${event.content}</event>`;
 		})
