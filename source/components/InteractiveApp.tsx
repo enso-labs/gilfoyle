@@ -79,8 +79,8 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 							<Text color="gray" bold>
 								Command History:
 							</Text>
-							<Box flexDirection="column" marginLeft={1}>
-								{state.history.slice(-5).map((item: string, index: number) => (
+							<Box flexDirection="column" marginLeft={1} minHeight={5}>
+								{state.history.slice(-9).map((item: string, index: number) => (
 									<Text key={index} color="#f1f1f1" dimColor>
 										{item}
 									</Text>
