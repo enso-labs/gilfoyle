@@ -8,7 +8,7 @@ let currentModelId: string | null = null;
 
 export async function getModel(modelName?: ChatModels): Promise<BaseChatModel> {
 	let selectedModel: string;
-	
+
 	if (modelName !== undefined) {
 		selectedModel = modelName.toString();
 	} else {
@@ -24,7 +24,11 @@ export async function getModel(modelName?: ChatModels): Promise<BaseChatModel> {
 	}
 
 	// Always create a new model instance if a specific model is requested or if the model changed
-	if (modelName !== undefined || model === null || currentModelId !== selectedModel) {
+	if (
+		modelName !== undefined ||
+		model === null ||
+		currentModelId !== selectedModel
+	) {
 		model = await initChatModel(selectedModel, {
 			// temperature: 0.7,
 		});

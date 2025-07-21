@@ -1,18 +1,18 @@
 import {useEffect} from 'react';
 import {Box, Text} from 'ink';
 import {getConfigManager} from '../utils/config.js';
-import { InteractiveAppProps } from '../entities/state.js';
-import { useAppContext } from '../providers/AppProvider/index.js';
-import { 
-	HomePage, 
-	ModelSelection, 
-	ApiConfig, 
-	HelpView, 
-	EditorView, 
-	ChatView, 
-	InitView, 
-	CompactView, 
-	ExportView 
+import {InteractiveAppProps} from '../entities/state.js';
+import {useAppContext} from '../providers/AppProvider/index.js';
+import {
+	HomePage,
+	ModelSelection,
+	ApiConfig,
+	HelpView,
+	EditorView,
+	ChatView,
+	InitView,
+	CompactView,
+	ExportView,
 } from '../views/index.js';
 
 export default function InteractiveApp({name, version}: InteractiveAppProps) {
@@ -25,7 +25,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 				try {
 					const configManager = getConfigManager();
 					const config = await configManager.load();
-					
+
 					if (name !== config.user?.name) {
 						await configManager.setUser({name});
 					}

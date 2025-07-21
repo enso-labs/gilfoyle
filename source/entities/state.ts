@@ -1,4 +1,4 @@
-import { ThreadState } from "../utils/memory.js";
+import {ThreadState} from '../utils/memory.js';
 
 export type AppState = {
 	currentView:

@@ -13,5 +13,5 @@ export default function App({name}: Props) {
 		<Router>
 			<InteractiveApp name={name} version="0.3.43" />
 		</Router>
-	)
+	);
 }

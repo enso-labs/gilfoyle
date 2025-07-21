@@ -1,4 +1,3 @@
-
 export type ThreadState = {
 	thread: {
 		usage: {
@@ -17,12 +16,13 @@ export type ThreadState = {
 };
 
 export async function agentMemory(
-	toolIntent: {intent: string, args: any} | string,
+	toolIntent: {intent: string; args: any} | string,
 	content: string,
 	state: ThreadState,
 	metadata: any = {},
 ): Promise<ThreadState> {
-	const intent = typeof toolIntent === 'string' ? toolIntent : toolIntent.intent;
+	const intent =
+		typeof toolIntent === 'string' ? toolIntent : toolIntent.intent;
 	// Create event object
 	const event: ThreadState['thread']['events'][0] = {
 		intent,
@@ -32,10 +32,10 @@ export async function agentMemory(
 
 	// Add additional attributes for tool events
 	if (
-		intent !== "user_input" &&
-		intent !== "lm_response" &&
-		typeof toolIntent !== "string" &&
-		"args" in toolIntent
+		intent !== 'user_input' &&
+		intent !== 'lm_response' &&
+		typeof toolIntent !== 'string' &&
+		'args' in toolIntent
 	) {
 		event.args = toolIntent.args;
 	}
@@ -91,7 +91,7 @@ export function convertStateToXML(state: ThreadState): string {
 	const events = state.thread.events
 		.map(event => {
 			const attrs = [`intent="${event.intent}"`];
-			
+
 			// Add all metadata properties as attributes
 			if (event.metadata) {
 				Object.entries(event.metadata).forEach(([key, value]) => {

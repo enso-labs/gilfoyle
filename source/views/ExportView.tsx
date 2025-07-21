@@ -1,9 +1,9 @@
 import {Box, Text} from 'ink';
-import { useAppContext } from '../providers/AppProvider/index.js';
+import {useAppContext} from '../providers/AppProvider/index.js';
 
 export default function ExportView() {
-	const { state } = useAppContext();
-	
+	const {state} = useAppContext();
+
 	return (
 		<Box flexDirection="column" marginY={1}>
 			<Text color="yellow" bold>
@@ -25,4 +25,4 @@ export default function ExportView() {
 			</Box>
 		</Box>
 	);
-} 
+}

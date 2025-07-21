@@ -24,7 +24,7 @@ type ModelSelectionProps = {
 function getChatModelsAsModelData(): ModelData[] {
 	const chatModelsClass = ChatModels as any;
 	const models: ModelData[] = [];
-	
+
 	// Get all static properties from ChatModels class
 	Object.getOwnPropertyNames(ChatModels).forEach(key => {
 		if (key !== 'prototype' && key !== 'length' && key !== 'name') {
@@ -33,13 +33,15 @@ function getChatModelsAsModelData(): ModelData[] {
 				const splitParts = modelId.split(':');
 				const providerId = splitParts[0];
 				const modelName = splitParts[1];
-				
+
 				if (providerId && modelName) {
 					models.push({
 						id: modelId,
 						config: {
 							name: modelId, // Use the actual ChatModels value as display name
-							description: `${getProviderDisplayName(providerId)} - ${modelName}`,
+							description: `${getProviderDisplayName(
+								providerId,
+							)} - ${modelName}`,
 							enabled: true,
 						},
 						providerId: providerId,
@@ -50,7 +52,7 @@ function getChatModelsAsModelData(): ModelData[] {
 			}
 		}
 	});
-	
+
 	return models;
 }
 
@@ -83,7 +85,7 @@ export default function ModelSelection({
 			try {
 				const configManager = getConfigManager();
 				const config = await configManager.load();
-				
+
 				// Always use ChatModels only
 				const models = getChatModelsAsModelData();
 
@@ -124,11 +126,11 @@ export default function ModelSelection({
 	}, {} as Record<string, ModelData[]>);
 
 	// For navigation, use the models that are actually displayed
-	const displayModels = searchQuery 
-		? filteredModels 
-		: recentModelsList.length > 0 
-			? recentModelsList 
-			: allModels;
+	const displayModels = searchQuery
+		? filteredModels
+		: recentModelsList.length > 0
+		? recentModelsList
+		: allModels;
 	const maxIndex = displayModels.length - 1;
 
 	useEffect(() => {
@@ -194,9 +196,7 @@ export default function ModelSelection({
 					backgroundColor={isSelected ? 'blue' : undefined}
 				>
 					{isSelected ? '> ' : '  '}
-					<Text bold>
-						{model.config.name}
-					</Text>{' '}
+					<Text bold>{model.config.name}</Text>{' '}
 					<Text color="gray">{model.providerName}</Text>
 					{isLocal && <Text color="yellow"> (local)</Text>}
 					<Text color="green"> ✓</Text>
@@ -276,41 +276,47 @@ export default function ModelSelection({
 										All Available Models
 									</Text>
 								</Box>
-								{allModels.slice(0, 10).map((model, index) =>
-									renderModelItem(model, index === selectedIndex),
-								)}
+								{allModels
+									.slice(0, 10)
+									.map((model, index) =>
+										renderModelItem(model, index === selectedIndex),
+									)}
 								{allModels.length > 10 && (
 									<Box marginLeft={2}>
-										<Text color="gray">... and {allModels.length - 10} more (use search to find specific models)</Text>
+										<Text color="gray">
+											... and {allModels.length - 10} more (use search to find
+											specific models)
+										</Text>
 									</Box>
 								)}
 							</Box>
 						)}
 
 						{/* Models by Provider */}
-						{recentModelsList.length > 0 && Object.entries(modelsByProvider).map(([provider, models]) => (
-							<Box key={provider} flexDirection="column" marginBottom={1}>
-								<Text color="yellow" bold>
-									{provider}
-								</Text>
-								{models.slice(0, 3).map(model => (
-									<Box key={model.id} marginLeft={2}>
-										<Text color="gray">
-											{model.config.name}
-											{model.providerId === 'ollama' && (
-												<Text color="yellow"> (local)</Text>
-											)}
-											<Text color="green"> ✓</Text>
-										</Text>
-									</Box>
-								))}
-								{models.length > 3 && (
-									<Box marginLeft={2}>
-										<Text color="gray">... and {models.length - 3} more</Text>
-									</Box>
-								)}
-							</Box>
-						))}
+						{recentModelsList.length > 0 &&
+							Object.entries(modelsByProvider).map(([provider, models]) => (
+								<Box key={provider} flexDirection="column" marginBottom={1}>
+									<Text color="yellow" bold>
+										{provider}
+									</Text>
+									{models.slice(0, 3).map(model => (
+										<Box key={model.id} marginLeft={2}>
+											<Text color="gray">
+												{model.config.name}
+												{model.providerId === 'ollama' && (
+													<Text color="yellow"> (local)</Text>
+												)}
+												<Text color="green"> ✓</Text>
+											</Text>
+										</Box>
+									))}
+									{models.length > 3 && (
+										<Box marginLeft={2}>
+											<Text color="gray">... and {models.length - 3} more</Text>
+										</Box>
+									)}
+								</Box>
+							))}
 					</>
 				)}
 			</Box>

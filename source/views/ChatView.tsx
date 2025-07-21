@@ -1,9 +1,9 @@
 import {Box, Text} from 'ink';
-import { useAppContext } from '../providers/AppProvider/index.js';
+import {useAppContext} from '../providers/AppProvider/index.js';
 
 export default function ChatView() {
-	const { state } = useAppContext();
-	
+	const {state} = useAppContext();
+
 	return (
 		<Box flexDirection="column" marginY={1}>
 			<Text color="yellow" bold>
@@ -15,8 +15,7 @@ export default function ChatView() {
 						Agent ready! Type your message below and press Enter.
 					</Text>
 					<Text color="gray" dimColor>
-						Token usage: {state.agentState.thread.usage.total_tokens}{' '}
-						total
+						Token usage: {state.agentState.thread.usage.total_tokens} total
 					</Text>
 				</Box>
 			)}
@@ -30,4 +29,4 @@ export default function ChatView() {
 			</Box>
 		</Box>
 	);
-} 
+}

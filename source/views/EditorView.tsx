@@ -10,4 +10,4 @@ export default function EditorView() {
 			<Text color="gray">Press ESC to return home</Text>
 		</Box>
 	);
-} 
+}

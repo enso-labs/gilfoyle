@@ -37,4 +37,4 @@ export default function HelpView() {
 			</Box>
 		</Box>
 	);
-} 
+}

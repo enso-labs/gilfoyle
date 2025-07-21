@@ -1,8 +1,14 @@
-import { useContext, createContext, useState, useCallback, useEffect } from "react";
-import { useInput, useApp } from 'ink';
-import { AppState } from '../../entities/state.js';
-import { ChatModels } from '../../config/llm.js';
-import { getConfigManager } from "../../utils/config.js";
+import {
+	useContext,
+	createContext,
+	useState,
+	useCallback,
+	useEffect,
+} from 'react';
+import {useInput, useApp} from 'ink';
+import {AppState} from '../../entities/state.js';
+import {ChatModels} from '../../config/llm.js';
+import {getConfigManager} from '../../utils/config.js';
 import {
 	agentLoop,
 	initializeAgent,
@@ -10,14 +16,14 @@ import {
 	exportConversation,
 	AgentResponse,
 } from '../../utils/agent.js';
-import { promises as fs } from 'fs';
+import {promises as fs} from 'fs';
 
 const configManager = getConfigManager();
 export const AppContext = createContext({});
 
-export default function AppProvider({ children }: { children: React.ReactNode }) {
-	const { exit } = useApp();
-	
+export default function AppProvider({children}: {children: React.ReactNode}) {
+	const {exit} = useApp();
+
 	const [state, setState] = useState<AppState>({
 		currentView: 'home',
 		input: '',
@@ -36,7 +42,8 @@ export default function AppProvider({ children }: { children: React.ReactNode })
 				const config = await configManager.load();
 
 				// Get the display name for the selected model
-				let selectedModelName = config.selectedModel || ChatModels.OPENAI_GPT_4_1_NANO;
+				let selectedModelName =
+					config.selectedModel || ChatModels.OPENAI_GPT_4_1_NANO;
 				if (config.selectedModel) {
 					const allModels = await configManager.getAllModels();
 					const selectedModel = allModels.find(
@@ -439,27 +446,34 @@ Agent is ready for interaction!
 								const allEvents = response.state.thread.events;
 								const lastProcessedCount = prev.processedEventCount;
 								const newEvents = allEvents.slice(lastProcessedCount);
-								
+
 								// Extract tool events and llm_response events from the new events
-								const newToolEvents = newEvents
-									.filter(e => e.intent !== 'user_input' && e.intent !== 'llm_response');
-								const llmResponseEvent = newEvents
-									.find(e => e.intent === 'llm_response');
-								
+								const newToolEvents = newEvents.filter(
+									e => e.intent !== 'user_input' && e.intent !== 'llm_response',
+								);
+								const llmResponseEvent = newEvents.find(
+									e => e.intent === 'llm_response',
+								);
+
 								// Build history with each new tool as individual message in order
 								const newHistoryItems = [...prev.history];
-								
+
 								// Add each new tool event individually with output
 								newToolEvents.forEach(event => {
 									const toolOutput = event.content ? ` → ${event.content}` : '';
-									newHistoryItems.push(`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`);
+									newHistoryItems.push(
+										`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`,
+									);
 								});
-								
+
 								// Extract model information from llm_response event
-								const modelUsed = llmResponseEvent?.metadata?.model || 'Unknown';
-								
+								const modelUsed =
+									llmResponseEvent?.metadata?.model || 'Unknown';
+
 								// Then add assistant response with model information
-								newHistoryItems.push(`🤖 Assistant (${modelUsed}): ${response.content}\n---`);
+								newHistoryItems.push(
+									`🤖 Assistant (${modelUsed}): ${response.content}\n---`,
+								);
 
 								return {
 									...prev,
@@ -547,20 +561,22 @@ Agent is ready for interaction!
 			}));
 		}
 	});
-	
-	return (    
-		<AppContext.Provider value={{
-			state,
-			setState,
-			handleBackToHome,
-			handleModelSelect,
-			handleCommand,
-		}}>
-				{children}
+
+	return (
+		<AppContext.Provider
+			value={{
+				state,
+				setState,
+				handleBackToHome,
+				handleModelSelect,
+				handleCommand,
+			}}
+		>
+			{children}
 		</AppContext.Provider>
 	);
 }
 
 export function useAppContext(): any {
-    return useContext(AppContext);
-}	
+	return useContext(AppContext);
+}
