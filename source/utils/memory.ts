@@ -1,3 +1,4 @@
+
 export type ThreadState = {
 	thread: {
 		usage: {
@@ -9,6 +10,7 @@ export type ThreadState = {
 		events: {
 			intent: string;
 			content: string;
+			args?: any;
 			metadata?: {
 				type?: string;
 				status?: string;
@@ -19,23 +21,27 @@ export type ThreadState = {
 };
 
 export async function agentMemory(
-	intent: string,
+	toolIntent: {intent: string, args: any} | string,
 	content: string,
 	state: ThreadState,
+	metadata: any = {},
 ): Promise<ThreadState> {
+	const intent = typeof toolIntent === 'string' ? toolIntent : toolIntent.intent;
 	// Create event object
 	const event: ThreadState['thread']['events'][0] = {
 		intent,
 		content,
+		metadata,
 	};
 
 	// Add additional attributes for tool events
-	if (intent !== 'user_input' && intent !== 'llm_response') {
-		event.metadata = {
-			type: 'tool',
-			status: 'success',
-			done: 'true',
-		};
+	if (
+		intent !== "user_input" &&
+		intent !== "lm_response" &&
+		typeof toolIntent !== "string" &&
+		"args" in toolIntent
+	) {
+		event.args = toolIntent.args;
 	}
 
 	// Add the new event to the state

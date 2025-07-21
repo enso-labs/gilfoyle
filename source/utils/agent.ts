@@ -2,14 +2,15 @@ import {ThreadState} from './memory.js';
 import {getConfigManager} from './config.js';
 import {callModel} from './llm.js';
 import ChatModels from '../config/llm.js';
-import {agentMemory, getSystemMessage, parseEvents} from './memory.js';
+import {agentMemory, getSystemMessage, parseEvents, convertStateToXML} from './memory.js';
 import {classifyIntent} from './classify.js';
 import {tools} from './tools.js';
+import { ToolIntent } from '../entities/tool.js';
+
 
 export interface AgentResponse {
 	content: string;
 	state: ThreadState;
-	toolsUsed: string[];
 	tokens?: {
 		prompt_tokens: number;
 		completion_tokens: number;
@@ -17,25 +18,8 @@ export interface AgentResponse {
 	};
 }
 
-export async function agentLoop(
-	query: string,
-	state: ThreadState,
-	model: ChatModels = ChatModels.OPENAI_GPT_4_1_MINI,
-): Promise<AgentResponse> {
-	const configManager = getConfigManager();
-	const config = await configManager.load();
-
-	// Use configured model or fallback
-	const selectedModel =
-		model || (config.selectedModel as ChatModels) || ChatModels.OPENAI_GPT_4_1_NANO;
-	const toolsUsed: string[] = [];
-
-	// Add user input to memory
-	state = await agentMemory('user_input', query, state);
-
-	// Tool execution - classify all tools from the input at once
-	const toolIntents = await classifyIntent(query, selectedModel.toString());
-
+export async function executeTools(toolIntents: ToolIntent[], state: ThreadState) {
+  const toolsUsed: string[] = [];
 	// Execute all identified tools
 	for (const toolIntent of toolIntents) {
 		const {intent, args} = toolIntent;
@@ -46,7 +30,7 @@ export async function agentLoop(
 
 		if (intent in tools) {
 			let toolOutput: string;
-
+      let metadata: any = {};
 			try {
 				// Execute the specific tool
 				switch (intent) {
@@ -137,19 +121,42 @@ export async function agentLoop(
 				}
 
 				// Add tool execution as an event
-				state = await agentMemory(intent, toolOutput, state);
+				state = await agentMemory(toolIntent, toolOutput, state, metadata);
 			} catch (error) {
 				const errorMessage = `Tool execution failed: ${
 					error instanceof Error ? error.message : 'Unknown error'
 				}`;
-				state = await agentMemory(intent, errorMessage, state);
+				state = await agentMemory(toolIntent, errorMessage, state);
 			}
 		}
 	}
+  return state;
+}
+
+export async function agentLoop(
+	query: string,
+	state: ThreadState,
+	model: ChatModels = ChatModels.OPENAI_GPT_4_1_MINI,
+): Promise<AgentResponse> {
+	const configManager = getConfigManager();
+	const config = await configManager.load();
+
+	// Use configured model or fallback
+	const selectedModel =
+		model || (config.selectedModel as ChatModels) || ChatModels.OPENAI_GPT_4_1_NANO;
+
+	// Add user input to memory
+	state = await agentMemory("user_input", query, state);
+
+	// Tool execution - classify all tools from the input at once
+	const toolIntents = await classifyIntent(query, selectedModel.toString());
+
+	// Execute all identified tools
+	state = await executeTools(toolIntents, state);
 
 	// Generate LLM response
 	const systemMessage = getSystemMessage(state);
-	const conversationHistory = buildConversationContext(state);
+	const conversationHistory = convertStateToXML(state);
 
 	try {
 		const llmResponse = await callModel(
@@ -163,7 +170,7 @@ export async function agentLoop(
 				: JSON.stringify(llmResponse.content);
 
 		// Add LLM response to memory
-		state = await agentMemory('llm_response', responseContent, state);
+		state = await agentMemory("llm_response", responseContent, state, {model: selectedModel});
 
 		// Update token usage if available
 		if (llmResponse.usage) {
@@ -183,19 +190,17 @@ export async function agentLoop(
 		return {
 			content: responseContent,
 			state,
-			toolsUsed,
 			tokens: llmResponse.usage,
 		};
 	} catch (error) {
 		const errorMessage = `LLM call failed: ${
 			error instanceof Error ? error.message : 'Unknown error'
 		}`;
-		state = await agentMemory('llm_error', errorMessage, state);
+		state = await agentMemory("llm_error", errorMessage, state);
 
 		return {
 			content: errorMessage,
 			state,
-			toolsUsed,
 		};
 	}
 }
@@ -310,26 +315,4 @@ export async function exportConversation(
 		default:
 			throw new Error(`Unsupported export format: ${format}`);
 	}
-}
-
-
-
-function buildConversationContext(state: ThreadState): string {
-	const events = parseEvents(state);
-	const recentEvents = events.slice(-10); // Keep last 10 events for context
-
-	return recentEvents
-		.map(e => {
-			switch (e.intent) {
-				case 'user_input':
-					return `Human: ${e.content}`;
-				case 'llm_response':
-					return `Assistant: ${e.content}`;
-				case 'get_weather':
-					return `[Weather Tool Result]: ${e.content}`;
-				default:
-					return `[${e.intent}]: ${e.content}`;
-			}
-		})
-		.join('\n\n');
 }

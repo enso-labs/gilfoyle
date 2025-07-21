@@ -103,7 +103,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 
 			setState(prev => ({
 				...prev,
-				history: [...prev.history, `> ${command}`],
+				history: [...prev.history, `👤 User: ${command}`],
 				input: '',
 			}));
 
@@ -435,19 +435,28 @@ Agent is ready for interaction!
 								state.agentState,
 							);
 
-							setState(prev => ({
-								...prev,
-								agentState: response.state,
-								isProcessing: false,
-								status: 'Chat Mode - Ready',
-								history: [
+							setState(prev => {
+								// Extract tool calls that occurred during this interaction
+								const toolEvents = response.state.thread.events
+									.filter(e => e.intent !== 'user_input' && e.intent !== 'llm_response');
+								
+								// Build history with tools appearing before assistant response
+								const newHistoryItems = [
 									...prev.history,
-									`Assistant: ${response.content}`,
-									...(response.toolsUsed.length > 0
-										? [`Tools used: ${response.toolsUsed.join(', ')}`]
-										: []),
-								],
-							}));
+									// Add tool messages first
+									...toolEvents.map(event => `🛠️ Tools: ${event.intent}`),
+									// Then add assistant response
+									`🤖 Assistant: ${response.content}`,
+								];
+
+								return {
+									...prev,
+									agentState: response.state,
+									isProcessing: false,
+									status: 'Chat Mode - Ready',
+									history: newHistoryItems,
+								};
+							});
 						} catch (error) {
 							setState(prev => ({
 								...prev,
