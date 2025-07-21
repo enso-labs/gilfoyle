@@ -36,6 +36,7 @@ type AppState = {
 	exportProgress?: string;
 	compactProgress?: string;
 	initProgress?: string;
+	processedEventCount?: number;
 };
 
 type InteractiveAppProps = {
@@ -53,6 +54,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		selectedModel: 'GPT-4.1 Nano',
 		configLoaded: false,
 		isProcessing: false,
+		processedEventCount: 0,
 	});
 
 	// Load configuration on startup
@@ -156,6 +158,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 								currentView: 'chat',
 								status: 'Chat Mode - Ready',
 								agentState: newAgentState,
+								processedEventCount: 0,
 								history: [...prev.history, 'Agent initialized successfully'],
 							}));
 						} catch (error) {
@@ -241,6 +244,7 @@ Agent is ready for interaction!
 						setState(prev => ({
 							...prev,
 							agentState: newAgentState,
+							processedEventCount: 0,
 							isProcessing: false,
 							initProgress: 'Agent initialized successfully!',
 							status: 'Initialization Complete',
@@ -270,6 +274,7 @@ Agent is ready for interaction!
 							status: 'Configuration reset to defaults',
 							history: [...prev.history, 'Configuration reset to defaults'],
 							agentState: undefined, // Reset agent state
+							processedEventCount: 0,
 						}));
 					} catch (error) {
 						setState(prev => ({
@@ -315,6 +320,7 @@ Agent is ready for interaction!
 						setState(prev => ({
 							...prev,
 							agentState: compactedState,
+							processedEventCount: compactedState.thread.events.length,
 							isProcessing: false,
 							compactProgress: 'Session compacted successfully!',
 							status: 'Compaction Complete',
@@ -417,6 +423,7 @@ Agent is ready for interaction!
 					setState(prev => ({
 						...prev,
 						history: [],
+						processedEventCount: 0,
 						status: 'Cleared',
 					}));
 					break;
@@ -436,18 +443,26 @@ Agent is ready for interaction!
 							);
 
 							setState(prev => {
-								// Extract tool calls that occurred during this interaction
-								const toolEvents = response.state.thread.events
+								// Get only the NEW events since last interaction
+								const allEvents = response.state.thread.events;
+								const lastProcessedCount = prev.processedEventCount || 0;
+								const newEvents = allEvents.slice(lastProcessedCount);
+								
+								// Extract only tool events from the new events
+								const newToolEvents = newEvents
 									.filter(e => e.intent !== 'user_input' && e.intent !== 'llm_response');
 								
-								// Build history with tools appearing before assistant response
-								const newHistoryItems = [
-									...prev.history,
-									// Add tool messages first
-									...toolEvents.map(event => `🛠️ Tools: ${event.intent}`),
-									// Then add assistant response
-									`🤖 Assistant: ${response.content}`,
-								];
+								// Build history with each new tool as individual message in order
+								const newHistoryItems = [...prev.history];
+								
+								// Add each new tool event individually with output
+								newToolEvents.forEach(event => {
+									const toolOutput = event.content ? ` → ${event.content}` : '';
+									newHistoryItems.push(`🛠️ Tools: ${event.intent}${toolOutput}`);
+								});
+								
+								// Then add assistant response
+								newHistoryItems.push(`🤖 Assistant: ${response.content}`);
 
 								return {
 									...prev,
@@ -455,6 +470,7 @@ Agent is ready for interaction!
 									isProcessing: false,
 									status: 'Chat Mode - Ready',
 									history: newHistoryItems,
+									processedEventCount: allEvents.length,
 								};
 							});
 						} catch (error) {
