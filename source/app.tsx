@@ -1,5 +1,6 @@
 import InteractiveApp from './components/InteractiveApp.js';
 import dotenv from 'dotenv';
+import Router from './router.js';
 
 dotenv.config();
 
@@ -8,5 +9,9 @@ type Props = {
 };
 
 export default function App({name}: Props) {
-	return <InteractiveApp name={name} version="0.3.43" />;
+	return (
+		<Router>
+			<InteractiveApp name={name} version="0.3.43" />
+		</Router>
+	)
 }

@@ -1,6 +1,7 @@
 import {useState, useEffect} from 'react';
 import {Box, Text, useInput} from 'ink';
 import {getConfigManager} from '../utils/config.js';
+import ChatModels from '../config/llm.js';
 
 type ModelData = {
 	id: string;
@@ -19,6 +20,52 @@ type ModelSelectionProps = {
 	onBack: () => void;
 };
 
+// Convert ChatModels to ModelData format
+function getChatModelsAsModelData(): ModelData[] {
+	const chatModelsClass = ChatModels as any;
+	const models: ModelData[] = [];
+	
+	// Get all static properties from ChatModels class
+	Object.getOwnPropertyNames(ChatModels).forEach(key => {
+		if (key !== 'prototype' && key !== 'length' && key !== 'name') {
+			const modelId = chatModelsClass[key];
+			if (typeof modelId === 'string' && modelId.includes(':')) {
+				const splitParts = modelId.split(':');
+				const providerId = splitParts[0];
+				const modelName = splitParts[1];
+				
+				if (providerId && modelName) {
+					models.push({
+						id: modelId,
+						config: {
+							name: modelId, // Use the actual ChatModels value as display name
+							description: `${getProviderDisplayName(providerId)} - ${modelName}`,
+							enabled: true,
+						},
+						providerId: providerId,
+						providerName: getProviderDisplayName(providerId),
+						available: true, // All models available without API key requirement
+					});
+				}
+			}
+		}
+	});
+	
+	return models;
+}
+
+function getProviderDisplayName(providerId: string): string {
+	const providerNames: Record<string, string> = {
+		openai: 'OpenAI',
+		anthropic: 'Anthropic',
+		'google-vertexai': 'Google Vertex AI',
+		xai: 'xAI',
+		groq: 'Groq',
+		ollama: 'Ollama',
+	};
+	return providerNames[providerId] || providerId.toUpperCase();
+}
+
 export default function ModelSelection({
 	onSelect,
 	onBack,
@@ -36,13 +83,17 @@ export default function ModelSelection({
 			try {
 				const configManager = getConfigManager();
 				const config = await configManager.load();
-				const models = await configManager.getAllModels();
+				
+				// Always use ChatModels only
+				const models = getChatModelsAsModelData();
 
 				setAllModels(models);
 				setRecentModels(config.recentModels || []);
 			} catch (error) {
 				console.error('Error loading models:', error);
-				setAllModels([]);
+				// Fallback to ChatModels if config loading fails
+				const fallbackModels = getChatModelsAsModelData();
+				setAllModels(fallbackModels);
 				setRecentModels([]);
 			} finally {
 				setLoading(false);
@@ -72,7 +123,12 @@ export default function ModelSelection({
 		return acc;
 	}, {} as Record<string, ModelData[]>);
 
-	const displayModels = searchQuery ? filteredModels : recentModelsList;
+	// For navigation, use the models that are actually displayed
+	const displayModels = searchQuery 
+		? filteredModels 
+		: recentModelsList.length > 0 
+			? recentModelsList 
+			: allModels;
 	const maxIndex = displayModels.length - 1;
 
 	useEffect(() => {
@@ -99,9 +155,7 @@ export default function ModelSelection({
 			}
 			if (displayModels[selectedIndex]) {
 				const selectedModel = displayModels[selectedIndex];
-				if (selectedModel.available) {
-					onSelect(selectedModel);
-				}
+				onSelect(selectedModel);
 			}
 			return;
 		}
@@ -140,13 +194,12 @@ export default function ModelSelection({
 					backgroundColor={isSelected ? 'blue' : undefined}
 				>
 					{isSelected ? '> ' : '  '}
-					<Text bold color={model.available ? undefined : 'gray'}>
+					<Text bold>
 						{model.config.name}
 					</Text>{' '}
 					<Text color="gray">{model.providerName}</Text>
 					{isLocal && <Text color="yellow"> (local)</Text>}
-					{!model.available && <Text color="red"> [API Key Required]</Text>}
-					{model.available && <Text color="green"> ✓</Text>}
+					<Text color="green"> ✓</Text>
 				</Text>
 			</Box>
 		);
@@ -165,7 +218,7 @@ export default function ModelSelection({
 			{/* Header */}
 			<Box justifyContent="space-between" marginBottom={1}>
 				<Text color="cyan" bold>
-					Select Model
+					Select Model ({allModels.length} available)
 				</Text>
 				<Text color="gray">esc</Text>
 			</Box>
@@ -202,37 +255,60 @@ export default function ModelSelection({
 					// Recent and Provider Sections
 					<>
 						{/* Recent Models */}
-						<Box flexDirection="column" marginBottom={2}>
-							<Box marginBottom={1}>
-								<Text color="yellow" bold>
-									Recent
-								</Text>
+						{recentModelsList.length > 0 && (
+							<Box flexDirection="column" marginBottom={2}>
+								<Box marginBottom={1}>
+									<Text color="yellow" bold>
+										Recent
+									</Text>
+								</Box>
+								{recentModelsList.map((model, index) =>
+									renderModelItem(model, index === selectedIndex),
+								)}
 							</Box>
-							{recentModelsList.map((model, index) =>
-								renderModelItem(model, index === selectedIndex),
-							)}
-						</Box>
+						)}
+
+						{/* Show all models if no recent models */}
+						{recentModelsList.length === 0 && (
+							<Box flexDirection="column" marginBottom={2}>
+								<Box marginBottom={1}>
+									<Text color="yellow" bold>
+										All Available Models
+									</Text>
+								</Box>
+								{allModels.slice(0, 10).map((model, index) =>
+									renderModelItem(model, index === selectedIndex),
+								)}
+								{allModels.length > 10 && (
+									<Box marginLeft={2}>
+										<Text color="gray">... and {allModels.length - 10} more (use search to find specific models)</Text>
+									</Box>
+								)}
+							</Box>
+						)}
 
 						{/* Models by Provider */}
-						{Object.entries(modelsByProvider).map(([provider, models]) => (
+						{recentModelsList.length > 0 && Object.entries(modelsByProvider).map(([provider, models]) => (
 							<Box key={provider} flexDirection="column" marginBottom={1}>
 								<Text color="yellow" bold>
 									{provider}
 								</Text>
-								{models.map(model => (
+								{models.slice(0, 3).map(model => (
 									<Box key={model.id} marginLeft={2}>
 										<Text color="gray">
 											{model.config.name}
 											{model.providerId === 'ollama' && (
 												<Text color="yellow"> (local)</Text>
 											)}
-											{model.available && <Text color="green"> ✓</Text>}
-											{!model.available && (
-												<Text color="red"> [Needs API Key]</Text>
-											)}
+											<Text color="green"> ✓</Text>
 										</Text>
 									</Box>
 								))}
+								{models.length > 3 && (
+									<Box marginLeft={2}>
+										<Text color="gray">... and {models.length - 3} more</Text>
+									</Box>
+								)}
 							</Box>
 						))}
 					</>
@@ -243,8 +319,7 @@ export default function ModelSelection({
 			<Box marginTop={1} borderStyle="round" borderColor="gray" paddingX={1}>
 				<Text color="gray" dimColor>
 					↑/↓ Navigate • Enter Select • S Search • ESC{' '}
-					{isSearching ? 'Cancel' : 'Back'} • Configure API keys for unavailable
-					models
+					{isSearching ? 'Cancel' : 'Back'}
 				</Text>
 			</Box>
 
@@ -268,15 +343,9 @@ export default function ModelSelection({
 						Provider: {displayModels[selectedIndex].providerName}
 						{displayModels[selectedIndex].providerId === 'ollama' && ' • Local'}
 					</Text>
-					{!displayModels[selectedIndex].available && (
-						<Box marginTop={1}>
-							<Text color="red">
-								⚠️ API key required for{' '}
-								{displayModels[selectedIndex].providerName}. Use /api-config to
-								set up.
-							</Text>
-						</Box>
-					)}
+					<Text color="magenta">
+						Model ID: {displayModels[selectedIndex].id}
+					</Text>
 				</Box>
 			)}
 		</Box>

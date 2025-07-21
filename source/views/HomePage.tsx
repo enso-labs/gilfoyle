@@ -1,6 +1,6 @@
 import {Box, Text} from 'ink';
-import Header from './Header.js';
-import Navigation from './Navigation.js';
+import Header from '../components/Header.js';
+import Navigation from '../components/Navigation.js';
 
 type HomePageProps = {
 	name?: string;
