@@ -448,9 +448,11 @@ Agent is ready for interaction!
 								const lastProcessedCount = prev.processedEventCount || 0;
 								const newEvents = allEvents.slice(lastProcessedCount);
 								
-								// Extract only tool events from the new events
+								// Extract tool events and llm_response events from the new events
 								const newToolEvents = newEvents
 									.filter(e => e.intent !== 'user_input' && e.intent !== 'llm_response');
+								const llmResponseEvent = newEvents
+									.find(e => e.intent === 'llm_response');
 								
 								// Build history with each new tool as individual message in order
 								const newHistoryItems = [...prev.history];
@@ -461,8 +463,11 @@ Agent is ready for interaction!
 									newHistoryItems.push(`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`);
 								});
 								
-								// Then add assistant response
-								newHistoryItems.push(`🤖 Assistant: ${response.content}\n---`);
+								// Extract model information from llm_response event
+								const modelUsed = llmResponseEvent?.metadata?.model || 'Unknown';
+								
+								// Then add assistant response with model information
+								newHistoryItems.push(`🤖 Assistant (${modelUsed}): ${response.content}\n---`);
 
 								return {
 									...prev,
