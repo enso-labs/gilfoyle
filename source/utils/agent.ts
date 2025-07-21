@@ -155,14 +155,14 @@ export async function executeTools(toolIntents: ToolIntent[], state: ThreadState
 export async function agentLoop(
 	query: string,
 	state: ThreadState,
-	model: ChatModels = ChatModels.OPENAI_GPT_4_1_MINI,
+	model: ChatModels = ChatModels.OPENAI_GPT_4_1_NANO,
 ): Promise<AgentResponse> {
 	const configManager = getConfigManager();
 	const config = await configManager.load();
 
 	// Use configured model or fallback
 	const selectedModel =
-		model || (config.selectedModel as ChatModels) || ChatModels.OPENAI_GPT_4_1_NANO;
+		model || (config.selectedModel as ChatModels);
 
 	// Add user input to memory
 	state = await agentMemory("user_input", query, state);

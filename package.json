@@ -21,6 +21,7 @@
 	],
 	"dependencies": {
 		"@langchain/core": "^0.3.66",
+		"@langchain/ollama": "^0.2.3",
 		"@langchain/openai": "^0.6.2",
 		"dotenv": "^17.2.0",
 		"ink": "^4.1.0",

@@ -12,6 +12,7 @@ import {
 } from '../../utils/agent.js';
 import { promises as fs } from 'fs';
 
+const configManager = getConfigManager();
 export const AppContext = createContext({});
 
 export default function AppProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,6 @@ export default function AppProvider({ children }: { children: React.ReactNode })
 	useEffect(() => {
 		const loadConfig = async () => {
 			try {
-				const configManager = getConfigManager();
 				const config = await configManager.load();
 
 				// Get the display name for the selected model
@@ -75,7 +75,6 @@ export default function AppProvider({ children }: { children: React.ReactNode })
 
 	const handleModelSelect = useCallback(async (model: any) => {
 		try {
-			const configManager = getConfigManager();
 			await configManager.setSelectedModel(model.id);
 
 			setState(prev => ({
@@ -190,7 +189,6 @@ export default function AppProvider({ children }: { children: React.ReactNode })
 							initProgress: 'Checking configuration...',
 						}));
 
-						const configManager = getConfigManager();
 						const config = await configManager.load();
 
 						setState(prev => ({
@@ -260,7 +258,6 @@ Agent is ready for interaction!
 					break;
 				case '/reset-config':
 					try {
-						const configManager = getConfigManager();
 						await configManager.reset();
 						setState(prev => ({
 							...prev,
@@ -358,7 +355,6 @@ Agent is ready for interaction!
 							exportProgress: 'Formatting conversation history...',
 						}));
 
-						const configManager = getConfigManager();
 						const config = await configManager.load();
 						const exportFormat = config.export?.format || 'markdown';
 
@@ -431,9 +427,11 @@ Agent is ready for interaction!
 						}));
 
 						try {
+							const config = await configManager.load();
 							const response: AgentResponse = await agentLoop(
 								command,
 								state.agentState,
+								config.selectedModel as ChatModels,
 							);
 
 							setState(prev => {
