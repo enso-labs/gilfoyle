@@ -458,11 +458,11 @@ Agent is ready for interaction!
 								// Add each new tool event individually with output
 								newToolEvents.forEach(event => {
 									const toolOutput = event.content ? ` → ${event.content}` : '';
-									newHistoryItems.push(`🛠️ Tools: ${event.intent}${toolOutput}`);
+									newHistoryItems.push(`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`);
 								});
 								
 								// Then add assistant response
-								newHistoryItems.push(`🤖 Assistant: ${response.content}`);
+								newHistoryItems.push(`🤖 Assistant: ${response.content}\n---`);
 
 								return {
 									...prev,
@@ -749,7 +749,7 @@ Agent is ready for interaction!
 							</Text>
 							<Box flexDirection="column" marginLeft={1}>
 								{state.history.slice(-5).map((item, index) => (
-									<Text key={index} color="gray" dimColor>
+									<Text key={index} color="#f1f1f1" dimColor>
 										{item}
 									</Text>
 								))}

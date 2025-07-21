@@ -18,8 +18,27 @@ export interface AgentResponse {
 	};
 }
 
+type EventStatusOptions = {
+  status?: string;
+  message?: string;
+};
+
+function eventStatus({ status }: EventStatusOptions = {}) {
+  const map: Record<string, { icon: string; label: string }> = {
+    error: { icon: '❌', label: 'error' },
+    success: { icon: '✅', label: 'success' },
+    pending: { icon: '⏳', label: 'pending' },
+    waiting_for_feedback: { icon: '🕒', label: 'waiting_for_feedback' },
+  };
+  const statusKey = status ?? '';
+  const { icon, label } = map[statusKey] || { icon: '❓', label: 'unknown' };
+  return {
+    icon,
+    status: label,
+  };
+}
+
 export async function executeTools(toolIntents: ToolIntent[], state: ThreadState) {
-  const toolsUsed: string[] = [];
 	// Execute all identified tools
 	for (const toolIntent of toolIntents) {
 		const {intent, args} = toolIntent;
@@ -30,43 +49,43 @@ export async function executeTools(toolIntents: ToolIntent[], state: ThreadState
 
 		if (intent in tools) {
 			let toolOutput: string;
-      let metadata: any = {};
+      let metadata: any = eventStatus({ status: 'success' });
 			try {
 				// Execute the specific tool
 				switch (intent) {
 					case 'get_weather':
 						if ('location' in args) {
 							toolOutput = tools.get_weather(args as {location: string});
-							toolsUsed.push('get_weather');
 						} else {
 							toolOutput = 'Missing location parameter for weather tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					case 'get_stock_info':
 						if ('ticker' in args) {
 							toolOutput = tools.get_stock_info(args as {ticker: string});
-							toolsUsed.push('get_stock_info');
 						} else {
 							toolOutput = 'Missing ticker parameter for stock info tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					case 'web_search':
 						if ('query' in args) {
 							toolOutput = tools.web_search(args as {query: string});
-							toolsUsed.push('web_search');
 						} else {
 							toolOutput = 'Missing query parameter for web search tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					case 'math_calculator':
 						if ('expression' in args) {
 							toolOutput = tools.math_calculator(args as {expression: string});
-							toolsUsed.push('math_calculator');
 						} else {
 							toolOutput = 'Missing expression parameter for calculator tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
@@ -75,18 +94,18 @@ export async function executeTools(toolIntents: ToolIntent[], state: ThreadState
 							toolOutput = await tools.file_search(
 								args as {pattern: string; directory?: string},
 							);
-							toolsUsed.push('file_search');
 						} else {
 							toolOutput = 'Missing pattern parameter for file search tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					case 'read_file':
 						if ('filepath' in args) {
 							toolOutput = await tools.read_file(args as {filepath: string});
-							toolsUsed.push('read_file');
 						} else {
 							toolOutput = 'Missing filepath parameter for read file tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
@@ -95,29 +114,29 @@ export async function executeTools(toolIntents: ToolIntent[], state: ThreadState
 							toolOutput = await tools.create_file(
 								args as {filepath: string; content: string},
 							);
-							toolsUsed.push('create_file');
 						} else {
 							toolOutput =
 								'Missing filepath or content parameter for create file tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					case 'git_status':
 						toolOutput = await tools.git_status();
-						toolsUsed.push('git_status');
 						break;
 
 					case 'npm_info':
 						if ('package' in args) {
 							toolOutput = await tools.npm_info(args as {package: string});
-							toolsUsed.push('npm_info');
 						} else {
 							toolOutput = 'Missing package parameter for npm info tool';
+              metadata = eventStatus({ status: 'error' });
 						}
 						break;
 
 					default:
 						toolOutput = `Unknown tool: ${intent}`;
+            metadata = eventStatus({ status: 'error' });
 				}
 
 				// Add tool execution as an event
