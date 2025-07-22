@@ -39,6 +39,16 @@ interface GitStatusIntent {
 	args: Record<string, never>;
 }
 
+interface PwdIntent {
+	intent: 'pwd';
+	args: Record<string, never>;
+}
+
+interface TerminalCommandIntent {
+	intent: 'terminal_command';
+	args: {command: string; timeout?: number};
+}
+
 interface NpmInfoIntent {
 	intent: 'npm_info';
 	args: {package: string};
@@ -58,6 +68,8 @@ type ToolIntent =
 	| ReadFileIntent
 	| CreateFileIntent
 	| GitStatusIntent
+	| PwdIntent
+	| TerminalCommandIntent
 	| NpmInfoIntent
 	| NoIntent;
 

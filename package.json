@@ -18,6 +18,7 @@
 		"test:stress": "node test.cjs stress",
 		"test:watch": "node test.cjs watch",
 		"test:all": "node test.cjs all",
+		"test:ava": "ava",
 		"test:component": "npm run format:check && ava test.tsx",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
@@ -30,12 +31,14 @@
 		"@langchain/core": "^0.3.66",
 		"@langchain/ollama": "^0.2.3",
 		"@langchain/openai": "^0.6.2",
+		"@langchain/tavily": "^0.1.4",
 		"dotenv": "^17.2.0",
 		"ink": "^4.1.0",
 		"langchain": "^0.3.30",
 		"meow": "^11.0.0",
 		"react": "^18.2.0",
-		"yaml": "^2.8.0"
+		"yaml": "^2.8.0",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
@@ -55,14 +58,5 @@
 		"tsx": "^4.19.2",
 		"typescript": "^5.0.3",
 		"xo": "^0.53.1"
-	},
-	"ava": {
-		"extensions": {
-			"ts": "module",
-			"tsx": "module"
-		},
-		"nodeArguments": [
-			"--import=tsx"
-		]
 	}
 }

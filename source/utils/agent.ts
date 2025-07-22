@@ -11,6 +11,7 @@ import {
 import {classifyIntent} from './classify.js';
 import {tools} from './tools.js';
 import {ToolIntent} from '../entities/tool.js';
+import Prompt from '../config/prompt.js';
 
 export interface AgentResponse {
 	content: string;
@@ -54,106 +55,109 @@ export async function executeTools(
 			continue;
 		}
 
-		if (intent in tools) {
-			let toolOutput: string;
-			let metadata: any = eventStatus({status: 'success'});
-			try {
-				// Execute the specific tool
-				switch (intent) {
-					case 'get_weather':
-						if ('location' in args) {
-							toolOutput = tools.get_weather(args as {location: string});
-						} else {
-							toolOutput = 'Missing location parameter for weather tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
+		// Check if tool exists in the tools object or handle special cases
+		let toolOutput: string;
+		let metadata: any = eventStatus({status: 'success'});
+		try {
+			// Execute the specific tool
+			switch (intent) {
+				// Note: get_weather and get_stock_info tools are not implemented yet
+				case 'get_weather':
+					toolOutput = 'Weather tool is not implemented yet.';
+					metadata = eventStatus({status: 'error'});
+					break;
 
-					case 'get_stock_info':
-						if ('ticker' in args) {
-							toolOutput = tools.get_stock_info(args as {ticker: string});
-						} else {
-							toolOutput = 'Missing ticker parameter for stock info tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
+				case 'get_stock_info':
+					toolOutput = 'Stock info tool is not implemented yet.';
+					metadata = eventStatus({status: 'error'});
+					break;
 
-					case 'web_search':
-						if ('query' in args) {
-							toolOutput = tools.web_search(args as {query: string});
-						} else {
-							toolOutput = 'Missing query parameter for web search tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
+				case 'npm_info':
+					toolOutput = 'NPM info tool is not implemented yet.';
+					metadata = eventStatus({status: 'error'});
+					break;
 
-					case 'math_calculator':
-						if ('expression' in args) {
-							toolOutput = tools.math_calculator(args as {expression: string});
-						} else {
-							toolOutput = 'Missing expression parameter for calculator tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
-
-					case 'file_search':
-						if ('pattern' in args) {
-							toolOutput = await tools.file_search(
-								args as {pattern: string; directory?: string},
-							);
-						} else {
-							toolOutput = 'Missing pattern parameter for file search tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
-
-					case 'read_file':
-						if ('filepath' in args) {
-							toolOutput = await tools.read_file(args as {filepath: string});
-						} else {
-							toolOutput = 'Missing filepath parameter for read file tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
-
-					case 'create_file':
-						if ('filepath' in args && 'content' in args) {
-							toolOutput = await tools.create_file(
-								args as {filepath: string; content: string},
-							);
-						} else {
-							toolOutput =
-								'Missing filepath or content parameter for create file tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
-
-					case 'git_status':
-						toolOutput = await tools.git_status();
-						break;
-
-					case 'npm_info':
-						if ('package' in args) {
-							toolOutput = await tools.npm_info(args as {package: string});
-						} else {
-							toolOutput = 'Missing package parameter for npm info tool';
-							metadata = eventStatus({status: 'error'});
-						}
-						break;
-
-					default:
-						toolOutput = `Unknown tool: ${intent}`;
+				case 'web_search':
+					if ('query' in args) {
+						toolOutput = await tools.web_search(args as {query: string});
+					} else {
+						toolOutput = 'Missing query parameter for web search tool';
 						metadata = eventStatus({status: 'error'});
-				}
+					}
+					break;
 
-				// Add tool execution as an event
-				state = await agentMemory(toolIntent, toolOutput, state, metadata);
-			} catch (error) {
-				const errorMessage = `Tool execution failed: ${
-					error instanceof Error ? error.message : 'Unknown error'
-				}`;
-				state = await agentMemory(toolIntent, errorMessage, state);
+				case 'math_calculator':
+					if ('expression' in args) {
+						toolOutput = tools.math_calculator(args as {expression: string});
+					} else {
+						toolOutput = 'Missing expression parameter for calculator tool';
+						metadata = eventStatus({status: 'error'});
+					}
+					break;
+
+				case 'file_search':
+					if ('pattern' in args) {
+						toolOutput = await tools.file_search(
+							args as {pattern: string; directory?: string},
+						);
+					} else {
+						toolOutput = 'Missing pattern parameter for file search tool';
+						metadata = eventStatus({status: 'error'});
+					}
+					break;
+
+				case 'read_file':
+					if ('filepath' in args) {
+						toolOutput = await tools.read_file(args as {filepath: string});
+					} else {
+						toolOutput = 'Missing filepath parameter for read file tool';
+						metadata = eventStatus({status: 'error'});
+					}
+					break;
+
+				case 'create_file':
+					if ('filepath' in args && 'content' in args) {
+						toolOutput = await tools.create_file(
+							args as {filepath: string; content: string},
+						);
+					} else {
+						toolOutput =
+							'Missing filepath or content parameter for create file tool';
+						metadata = eventStatus({status: 'error'});
+					}
+					break;
+
+				case 'git_status':
+					toolOutput = await tools.git_status();
+					break;
+
+				case 'pwd':
+					toolOutput = tools.pwd();
+					break;
+
+				case 'terminal_command':
+					if ('command' in args) {
+						toolOutput = await tools.terminal_command(
+							args as {command: string; timeout?: number},
+						);
+					} else {
+						toolOutput = 'Missing command parameter for terminal command tool';
+						metadata = eventStatus({status: 'error'});
+					}
+					break;
+
+				default:
+					toolOutput = `Unknown tool: ${intent}`;
+					metadata = eventStatus({status: 'error'});
 			}
+
+			// Add tool execution as an event
+			state = await agentMemory(toolIntent, toolOutput, state, metadata);
+		} catch (error) {
+			const errorMessage = `Tool execution failed: ${
+				error instanceof Error ? error.message : 'Unknown error'
+			}`;
+			state = await agentMemory(toolIntent, errorMessage, state);
 		}
 	}
 	return state;
@@ -235,10 +239,7 @@ export async function agentLoop(
 export async function initializeAgent(
 	systemPrompt?: string,
 ): Promise<ThreadState> {
-	const defaultSystemPrompt =
-		systemPrompt ||
-		`You are Gilfoyle, an AI development assistant. You are helpful, knowledgeable about programming, and can assist with various development tasks. You have access to tools for getting weather information and other utilities. Be concise but thorough in your responses.`;
-
+	const defaultSystemPrompt = systemPrompt || Prompt.DEFAULT_SYSTEM_PROMPT;
 	return {
 		thread: {
 			usage: {
