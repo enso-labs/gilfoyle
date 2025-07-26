@@ -8,11 +8,8 @@ import {
 	ModelSelection,
 	ApiConfig,
 	HelpView,
-	EditorView,
 	ChatView,
 	InitView,
-	CompactView,
-	ExportView,
 } from '../views/index.js';
 
 export default function InteractiveApp({name, version}: InteractiveAppProps) {
@@ -51,16 +48,10 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 				);
 			case 'help':
 				return <HelpView />;
-			case 'editor':
-				return <EditorView />;
 			case 'chat':
 				return <ChatView />;
 			case 'init':
 				return <InitView />;
-			case 'compact':
-				return <CompactView />;
-			case 'export':
-				return <ExportView />;
 			default:
 				return <HomePage name={name} version={version} />;
 		}

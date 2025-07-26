@@ -10,16 +10,10 @@ export default function HelpView() {
 			<Text> Show this help message</Text>
 			<Text color="green">/chat</Text>
 			<Text> Start conversing with the AI agent</Text>
-			<Text color="green">/editor</Text>
-			<Text> Open the text editor</Text>
 			<Text color="green">/models</Text>
 			<Text> List available AI models</Text>
 			<Text color="green">/init</Text>
 			<Text> Initialize agent and create AGENTS.md</Text>
-			<Text color="green">/compact</Text>
-			<Text> Compact and summarize conversation history</Text>
-			<Text color="green">/export</Text>
-			<Text> Export conversation to file</Text>
 			<Text color="green">/home</Text>
 			<Text> Return to home screen</Text>
 			<Text color="green">clear</Text>
