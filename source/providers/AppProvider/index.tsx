@@ -97,6 +97,124 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 		}
 	}, []);
 
+	const handleChatInput = useCallback(
+		async (userInput: string) => {
+			// Initialize agent if not already initialized
+			if (!state.agentState) {
+				try {
+					const newAgentState = await initializeAgent();
+					setState(prev => ({
+						...prev,
+						currentView: 'chat',
+						status: 'Chat Mode - Ready',
+						agentState: newAgentState,
+						processedEventCount: 0,
+						history: [...prev.history, 'Agent initialized successfully'],
+					}));
+
+					// Process the user input with the newly initialized agent
+					await processChatMessage(userInput, newAgentState);
+				} catch (error) {
+					setState(prev => ({
+						...prev,
+						status: 'Failed to initialize agent',
+						history: [
+							...prev.history,
+							`Error: ${
+								error instanceof Error ? error.message : 'Unknown error'
+							}`,
+						],
+					}));
+				}
+			} else {
+				// Agent already initialized, switch to chat view and process message
+				setState(prev => ({
+					...prev,
+					currentView: 'chat',
+					status: 'Chat Mode - Ready',
+				}));
+				await processChatMessage(userInput, state.agentState);
+			}
+		},
+		[state.agentState],
+	);
+
+	const processChatMessage = useCallback(
+		async (userInput: string, agentState: any) => {
+			setState(prev => ({
+				...prev,
+				isProcessing: true,
+				status: 'Processing...',
+			}));
+
+			try {
+				const config = await configManager.load();
+				const response: AgentResponse = await agentLoop(
+					userInput,
+					agentState,
+					config.selectedModel as ChatModels,
+				);
+
+				setState(prev => {
+					// Get only the NEW events since last interaction
+					const allEvents = response.state.thread.events;
+					const lastProcessedCount = prev.processedEventCount;
+					const newEvents = allEvents.slice(lastProcessedCount);
+
+					// Extract tool events and llm_response events from the new events
+					const newToolEvents = newEvents.filter(
+						e => e.intent !== 'user_input' && e.intent !== 'llm_response',
+					);
+					const llmResponseEvent = newEvents.find(
+						e => e.intent === 'llm_response',
+					);
+
+					// Build history with each new tool as individual message in order
+					const newHistoryItems = [...prev.history];
+
+					// Add each new tool event individually with output
+					newToolEvents.forEach(event => {
+						const toolOutput = event.content ? ` → ${event.content}` : '';
+						newHistoryItems.push(
+							`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`,
+						);
+					});
+
+					// Extract model information from llm_response event
+					const modelUsed =
+						llmResponseEvent?.metadata?.model || 'Unknown';
+
+					// Then add assistant response with model information
+					newHistoryItems.push(
+						`🤖 Assistant (${modelUsed}): ${response.content}\n---`,
+					);
+
+					return {
+						...prev,
+						agentState: response.state,
+						isProcessing: false,
+						status: 'Chat Mode - Ready',
+						history: newHistoryItems,
+						processedEventCount: allEvents.length,
+					};
+				});
+			} catch (error) {
+				setState(prev => ({
+					...prev,
+					isProcessing: false,
+					status: 'Chat Error',
+					history: [
+						...prev.history,
+						`Error: ${
+							error instanceof Error ? error.message : 'Unknown error'
+						}`,
+					],
+				}));
+			}
+		},
+		[],
+	);
+
 	const handleCommand = useCallback(
 		async (command: string) => {
 			const trimmedCommand = command.trim().toLowerCase();
@@ -293,79 +411,11 @@ Agent is ready for interaction!
 					}));
 					break;
 				default:
-					// Handle agent conversation
-					if (state.currentView === 'chat' && state.agentState) {
-						setState(prev => ({
-							...prev,
-							isProcessing: true,
-							status: 'Processing...',
-						}));
-
-						try {
-							const config = await configManager.load();
-							const response: AgentResponse = await agentLoop(
-								command,
-								state.agentState,
-								config.selectedModel as ChatModels,
-							);
-
-							setState(prev => {
-								// Get only the NEW events since last interaction
-								const allEvents = response.state.thread.events;
-								const lastProcessedCount = prev.processedEventCount;
-								const newEvents = allEvents.slice(lastProcessedCount);
-
-								// Extract tool events and llm_response events from the new events
-								const newToolEvents = newEvents.filter(
-									e => e.intent !== 'user_input' && e.intent !== 'llm_response',
-								);
-								const llmResponseEvent = newEvents.find(
-									e => e.intent === 'llm_response',
-								);
-
-								// Build history with each new tool as individual message in order
-								const newHistoryItems = [...prev.history];
-
-								// Add each new tool event individually with output
-								newToolEvents.forEach(event => {
-									const toolOutput = event.content ? ` → ${event.content}` : '';
-									newHistoryItems.push(
-										`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`,
-									);
-								});
-
-								// Extract model information from llm_response event
-								const modelUsed =
-									llmResponseEvent?.metadata?.model || 'Unknown';
-
-								// Then add assistant response with model information
-								newHistoryItems.push(
-									`🤖 Assistant (${modelUsed}): ${response.content}\n---`,
-								);
-
-								return {
-									...prev,
-									agentState: response.state,
-									isProcessing: false,
-									status: 'Chat Mode - Ready',
-									history: newHistoryItems,
-									processedEventCount: allEvents.length,
-								};
-							});
-						} catch (error) {
-							setState(prev => ({
-								...prev,
-								isProcessing: false,
-								status: 'Chat Error',
-								history: [
-									...prev.history,
-									`Error: ${
-										error instanceof Error ? error.message : 'Unknown error'
-									}`,
-								],
-							}));
-						}
+					// If input doesn't start with "/", treat it as chat input
+					if (!command.startsWith('/')) {
+						await handleChatInput(command);
 					} else {
+						// Handle unknown slash commands
 						setState(prev => ({
 							...prev,
 							history: [
@@ -377,7 +427,7 @@ Agent is ready for interaction!
 					}
 			}
 		},
-		[exit, state.agentState],
+		[exit, state.agentState, handleChatInput],
 	);
 
 	// Centralized input handling
