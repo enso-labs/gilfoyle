@@ -19,11 +19,6 @@ const menuOptions = [
 		description: 'Start conversing with the AI agent',
 	},
 	{
-		key: '/editor',
-		label: 'Editor',
-		description: 'Open the editor',
-	},
-	{
 		key: '/models',
 		label: 'Models',
 		description: 'List available models',
@@ -32,16 +27,6 @@ const menuOptions = [
 		key: '/init',
 		label: 'Initialize',
 		description: 'Initialize agent and create AGENTS.md',
-	},
-	{
-		key: '/compact',
-		label: 'Compact',
-		description: 'Compact conversation history',
-	},
-	{
-		key: '/export',
-		label: 'Export',
-		description: 'Export conversation to file',
 	},
 	{
 		key: '/config',

@@ -12,8 +12,6 @@ import {getConfigManager} from '../../utils/config.js';
 import {
 	agentLoop,
 	initializeAgent,
-	compactConversation,
-	exportConversation,
 	AgentResponse,
 } from '../../utils/agent.js';
 import {promises as fs} from 'fs';
@@ -135,13 +133,6 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 						status: 'Viewing Help',
 					}));
 					break;
-				case '/editor':
-					setState(prev => ({
-						...prev,
-						currentView: 'editor',
-						status: 'Editor Mode',
-					}));
-					break;
 				case '/models':
 					setState(prev => ({
 						...prev,
@@ -231,8 +222,6 @@ ${(await configManager.getAllModels())
 
 ## Usage
 - Use \`/chat\` to start a conversation with the agent
-- Use \`/compact\` to summarize long conversations
-- Use \`/export\` to save conversation history
 - Use \`/models\` to change the active model
 
 Agent is ready for interaction!
@@ -278,127 +267,6 @@ Agent is ready for interaction!
 						setState(prev => ({
 							...prev,
 							status: 'Error resetting configuration',
-						}));
-					}
-					break;
-				case '/compact':
-					if (!state.agentState) {
-						setState(prev => ({
-							...prev,
-							status: 'No agent session to compact',
-							history: [...prev.history, 'Initialize agent first with /init'],
-						}));
-						break;
-					}
-
-					setState(prev => ({
-						...prev,
-						currentView: 'compact',
-						status: 'Compacting Session',
-						isProcessing: true,
-						compactProgress: 'Analyzing conversation history...',
-					}));
-
-					try {
-						setState(prev => ({
-							...prev,
-							compactProgress: 'Generating conversation summary...',
-						}));
-
-						const compactedState = await compactConversation(state.agentState);
-
-						setState(prev => ({
-							...prev,
-							compactProgress: 'Optimizing memory usage...',
-						}));
-
-						// Simulate a brief delay for UX
-						await new Promise(resolve => setTimeout(resolve, 1000));
-
-						setState(prev => ({
-							...prev,
-							agentState: compactedState,
-							processedEventCount: compactedState.thread.events.length,
-							isProcessing: false,
-							compactProgress: 'Session compacted successfully!',
-							status: 'Compaction Complete',
-							history: [
-								...prev.history,
-								`Conversation compacted: ${compactedState.thread.events.length} events processed`,
-							],
-						}));
-					} catch (error) {
-						setState(prev => ({
-							...prev,
-							isProcessing: false,
-							compactProgress: `Compaction failed: ${
-								error instanceof Error ? error.message : 'Unknown error'
-							}`,
-							status: 'Compaction Error',
-						}));
-					}
-					break;
-				case '/export':
-					if (!state.agentState) {
-						setState(prev => ({
-							...prev,
-							status: 'No agent session to export',
-							history: [...prev.history, 'Initialize agent first with /init'],
-						}));
-						break;
-					}
-
-					setState(prev => ({
-						...prev,
-						currentView: 'export',
-						status: 'Exporting Conversation',
-						isProcessing: true,
-						exportProgress: 'Preparing conversation data...',
-					}));
-
-					try {
-						setState(prev => ({
-							...prev,
-							exportProgress: 'Formatting conversation history...',
-						}));
-
-						const config = await configManager.load();
-						const exportFormat = config.export?.format || 'markdown';
-
-						const exportContent = await exportConversation(
-							state.agentState,
-							exportFormat,
-						);
-
-						setState(prev => ({
-							...prev,
-							exportProgress: 'Saving to file...',
-						}));
-
-						const filename = `gilfoyle-export-${new Date()
-							.toISOString()
-							.slice(0, 19)
-							.replace(/:/g, '-')}.${exportFormat}`;
-						await fs.writeFile(filename, exportContent, 'utf8');
-
-						setState(prev => ({
-							...prev,
-							isProcessing: false,
-							exportProgress: `Exported to ${filename}`,
-							status: 'Export Complete',
-							history: [
-								...prev.history,
-								`Conversation exported to ${filename}`,
-							],
-						}));
-					} catch (error) {
-						setState(prev => ({
-							...prev,
-							isProcessing: false,
-							exportProgress: `Export failed: ${
-								error instanceof Error ? error.message : 'Unknown error'
-							}`,
-							status: 'Export Error',
 						}));
 					}
 					break;

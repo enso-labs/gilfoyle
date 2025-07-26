@@ -4,11 +4,8 @@ export type AppState = {
 	currentView:
 		| 'home'
 		| 'help'
-		| 'editor'
 		| 'models'
 		| 'init'
-		| 'compact'
-		| 'export'
 		| 'api-config'
 		| 'chat';
 	input: string;
@@ -18,8 +15,6 @@ export type AppState = {
 	configLoaded: boolean;
 	agentState?: ThreadState;
 	isProcessing: boolean;
-	exportProgress?: string;
-	compactProgress?: string;
 	initProgress?: string;
 	processedEventCount?: number;
 };
