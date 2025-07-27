@@ -181,3 +181,4 @@ desktop.ini
 .sass-cache/
 connect.lock
 typings/ 
+**/.worktrees/

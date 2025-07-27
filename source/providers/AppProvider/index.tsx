@@ -9,11 +9,7 @@ import {useInput, useApp} from 'ink';
 import {AppState} from '../../entities/state.js';
 import {ChatModels} from '../../config/llm.js';
 import {getConfigManager} from '../../utils/config.js';
-import {
-	agentLoop,
-	initializeAgent,
-	AgentResponse,
-} from '../../utils/agent.js';
+import {agentLoop, initializeAgent, AgentResponse} from '../../utils/agent.js';
 import {promises as fs} from 'fs';
 
 const configManager = getConfigManager();
@@ -181,8 +177,7 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 					});
 
 					// Extract model information from llm_response event
-					const modelUsed =
-						llmResponseEvent?.metadata?.model || 'Unknown';
+					const modelUsed = llmResponseEvent?.metadata?.model || 'Unknown';
 
 					// Then add assistant response with model information
 					newHistoryItems.push(

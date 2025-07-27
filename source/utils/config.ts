@@ -346,8 +346,8 @@ export class ConfigManager {
 		if (!config.provider[providerId]) {
 			throw new Error(`Provider ${providerId} not found`);
 		}
-		config.provider[providerId].apiKey = apiKey;
-		config.provider[providerId].enabled =
+		config.provider[providerId]!.apiKey = apiKey;
+		config.provider[providerId]!.enabled =
 			apiKey.length > 0 || providerId === 'ollama';
 		await this.save();
 	}
@@ -371,7 +371,7 @@ export class ConfigManager {
 		if (!config.provider[providerId]) {
 			throw new Error(`Provider ${providerId} not found`);
 		}
-		config.provider[providerId].enabled = enabled;
+		config.provider[providerId]!.enabled = enabled;
 		await this.save();
 	}
 
