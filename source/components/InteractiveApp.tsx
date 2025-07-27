@@ -3,6 +3,7 @@ import {Box, Text} from 'ink';
 import {getConfigManager} from '../utils/config.js';
 import {InteractiveAppProps} from '../entities/state.js';
 import {useAppContext} from '../providers/AppProvider/index.js';
+import {CommandSuggestions, InputHints} from './index.js';
 import {
 	HomePage,
 	ModelSelection,
@@ -13,7 +14,7 @@ import {
 } from '../views/index.js';
 
 export default function InteractiveApp({name, version}: InteractiveAppProps) {
-	const {state, handleModelSelect, handleBackToHome} = useAppContext();
+	const {state, handleModelSelect, handleBackToHome, inputState} = useAppContext();
 
 	// Update user name in config if provided
 	useEffect(() => {
@@ -80,12 +81,35 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						</Box>
 					)}
 
+					{/* Input Hints */}
+					{inputState && (
+						<InputHints 
+							isVisible={inputState.showHints} 
+							currentView={state.currentView} 
+						/>
+					)}
+
 					{/* Input Section */}
 					<Box borderStyle="round" borderColor="cyan" paddingX={1} marginY={1}>
 						<Text color="cyan">$ </Text>
 						<Text>{state.input}</Text>
+						{inputState?.autocompletePreview && state.input.startsWith('/') && (
+							<Text color="gray" dimColor>
+								{inputState.autocompletePreview.slice(state.input.length)}
+							</Text>
+						)}
 						<Text color="gray">_</Text>
 					</Box>
+
+					{/* Command Suggestions */}
+					{inputState && (
+						<CommandSuggestions
+							suggestions={inputState.suggestions}
+							selectedIndex={inputState.selectedSuggestionIndex}
+							isVisible={inputState.showSuggestions}
+							maxSuggestions={5}
+						/>
+					)}
 				</>
 			)}
 
