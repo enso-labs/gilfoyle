@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import {useState, useCallback} from 'react';
 import {Box, Text} from 'ink';
 import TextInput from 'ink-text-input';
 import {useAppContext} from '../providers/AppProvider/index.js';
