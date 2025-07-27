@@ -156,7 +156,7 @@ export default function ModelSelection({
 				return;
 			}
 			if (displayModels[selectedIndex]) {
-				const selectedModel = displayModels[selectedIndex];
+				const selectedModel = displayModels[selectedIndex]!;
 				onSelect(selectedModel);
 			}
 			return;
@@ -339,18 +339,18 @@ export default function ModelSelection({
 					flexDirection="column"
 				>
 					<Text color="cyan" bold>
-						{displayModels[selectedIndex].config.name}
+						{displayModels[selectedIndex]!.config.name}
 					</Text>
 					<Text color="gray">
-						{displayModels[selectedIndex].config.description ||
+						{displayModels[selectedIndex]!.config.description ||
 							'No description available'}
 					</Text>
 					<Text color="yellow">
-						Provider: {displayModels[selectedIndex].providerName}
-						{displayModels[selectedIndex].providerId === 'ollama' && ' • Local'}
+						Provider: {displayModels[selectedIndex]!.providerName}
+						{displayModels[selectedIndex]!.providerId === 'ollama' && ' • Local'}
 					</Text>
 					<Text color="magenta">
-						Model ID: {displayModels[selectedIndex].id}
+						Model ID: {displayModels[selectedIndex]!.id}
 					</Text>
 				</Box>
 			)}
