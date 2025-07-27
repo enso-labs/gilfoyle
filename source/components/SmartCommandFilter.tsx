@@ -1,6 +1,10 @@
 import {useState, useEffect, useCallback} from 'react';
 import {Box, Text, useInput} from 'ink';
-import {fuzzySearch, debounce, type SearchableCommand} from '../utils/fuzzySearch.js';
+import {
+	fuzzySearch,
+	debounce,
+	type SearchableCommand,
+} from '../utils/fuzzySearch.js';
 
 interface SmartCommandFilterProps {
 	commands: SearchableCommand[];
@@ -26,7 +30,8 @@ export default function SmartCommandFilter({
 }: SmartCommandFilterProps) {
 	const [filter, setFilter] = useState('');
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [filteredCommands, setFilteredCommands] = useState<SearchableCommand[]>(commands);
+	const [filteredCommands, setFilteredCommands] =
+		useState<SearchableCommand[]>(commands);
 
 	// Debounced filter function to improve performance
 	const debouncedFilterUpdate = useCallback(
@@ -36,7 +41,7 @@ export default function SmartCommandFilter({
 			setSelectedIndex(0); // Reset selection to first item
 			onFilterChange?.(filtered);
 		}, 150),
-		[commands, maxResults, onFilterChange]
+		[commands, maxResults, onFilterChange],
 	);
 
 	// Update filtered commands when filter changes
@@ -55,12 +60,14 @@ export default function SmartCommandFilter({
 	useInput((input: string, key: any) => {
 		if (key.upArrow) {
 			setSelectedIndex(prevIndex => {
-				const newIndex = prevIndex > 0 ? prevIndex - 1 : filteredCommands.length - 1;
+				const newIndex =
+					prevIndex > 0 ? prevIndex - 1 : filteredCommands.length - 1;
 				return newIndex;
 			});
 		} else if (key.downArrow) {
 			setSelectedIndex(prevIndex => {
-				const newIndex = prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : 0;
+				const newIndex =
+					prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : 0;
 				return newIndex;
 			});
 		} else if (key.return) {
@@ -77,18 +84,16 @@ export default function SmartCommandFilter({
 	const renderCommand = (command: SearchableCommand, index: number) => {
 		const isSelected = index === selectedIndex;
 		const prefix = isSelected ? '> ' : '  ';
-		
+
 		return (
 			<Box key={command.key} flexDirection="row">
-				<Text color={isSelected ? 'cyan' : 'gray'}>
-					{prefix}
-				</Text>
+				<Text color={isSelected ? 'cyan' : 'gray'}>{prefix}</Text>
 				<Box flexDirection="column" flexGrow={1}>
 					<Text color={isSelected ? 'cyan' : 'green'} bold>
 						{command.key}
 					</Text>
 					<Text color={isSelected ? 'white' : 'gray'} dimColor={!isSelected}>
-						  {command.description}
+						{command.description}
 					</Text>
 				</Box>
 			</Box>
@@ -125,7 +130,9 @@ export default function SmartCommandFilter({
 
 		return (
 			<Box flexDirection="column" marginTop={1}>
-				{filteredCommands.map((command, index) => renderCommand(command, index))}
+				{filteredCommands.map((command, index) =>
+					renderCommand(command, index),
+				)}
 			</Box>
 		);
 	};
@@ -133,17 +140,19 @@ export default function SmartCommandFilter({
 	const renderHeader = () => {
 		const commandCount = filteredCommands.length;
 		const totalCount = commands.length;
-		const countText = filter 
+		const countText = filter
 			? `${commandCount} of ${totalCount} commands`
 			: `${totalCount} commands`;
 
 		return (
 			<Box flexDirection="column" marginBottom={1}>
 				<Box flexDirection="row" marginBottom={1}>
-					<Text color="blue" bold>🔍 </Text>
+					<Text color="blue" bold>
+						🔍{' '}
+					</Text>
 					<Text color="white">{placeholder}</Text>
 				</Box>
-				
+
 				<Box flexDirection="row" justifyContent="space-between">
 					<Box flexDirection="row">
 						<Text color="gray">Search: </Text>

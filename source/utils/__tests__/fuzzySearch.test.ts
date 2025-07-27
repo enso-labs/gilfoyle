@@ -231,12 +231,12 @@ describe('fuzzySearch', () => {
 
 		it('should handle rapid successive searches', () => {
 			const queries = ['h', 'he', 'hel', 'help'];
-			
+
 			queries.forEach(query => {
 				const startTime = Date.now();
 				fuzzySearch(mockCommands, query);
 				const endTime = Date.now();
-				
+
 				expect(endTime - startTime).toBeLessThan(10);
 			});
 		});

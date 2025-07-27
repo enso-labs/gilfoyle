@@ -74,7 +74,11 @@ function calculateMatchScore(query: string, target: string): number {
 	let queryIndex = 0;
 	let lastMatchIndex = -1;
 
-	for (let targetIndex = 0; targetIndex < lowerTarget.length && queryIndex < lowerQuery.length; targetIndex++) {
+	for (
+		let targetIndex = 0;
+		targetIndex < lowerTarget.length && queryIndex < lowerQuery.length;
+		targetIndex++
+	) {
 		if (lowerQuery[queryIndex] === lowerTarget[targetIndex]) {
 			// Bonus for consecutive matches
 			if (targetIndex === lastMatchIndex + 1) {
@@ -82,7 +86,7 @@ function calculateMatchScore(query: string, target: string): number {
 			}
 			// Bonus for early matches
 			score += Math.max(0, 50 - targetIndex);
-			
+
 			lastMatchIndex = targetIndex;
 			queryIndex++;
 		}
@@ -97,7 +101,10 @@ function calculateMatchScore(query: string, target: string): number {
  * @param query - The search query
  * @returns Filtered and sorted array of matching commands
  */
-export function fuzzySearch(commands: SearchableCommand[], query: string): SearchableCommand[] {
+export function fuzzySearch(
+	commands: SearchableCommand[],
+	query: string,
+): SearchableCommand[] {
 	if (!query?.trim()) {
 		return commands;
 	}
@@ -107,13 +114,16 @@ export function fuzzySearch(commands: SearchableCommand[], query: string): Searc
 	for (const command of commands) {
 		const keyScore = calculateMatchScore(query, command.key || '');
 		const labelScore = calculateMatchScore(query, command.label || '');
-		const descriptionScore = calculateMatchScore(query, command.description || '');
+		const descriptionScore = calculateMatchScore(
+			query,
+			command.description || '',
+		);
 
 		// Use the highest score from any field, with key matches weighted higher
 		const bestScore = Math.max(
 			keyScore * 1.2, // Prefer key matches
 			labelScore,
-			descriptionScore * 0.8 // Lower weight for description matches
+			descriptionScore * 0.8, // Lower weight for description matches
 		);
 
 		if (bestScore > 0) {
@@ -147,7 +157,7 @@ export function highlightMatches(text: string, query: string): string {
 		// Escape special regex characters in query
 		const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		const regex = new RegExp(`(${escapedQuery})`, 'gi');
-		
+
 		// For now, just return the original text since Ink has limited styling
 		// In a real implementation, you might use chalk or Ink's color components
 		return text.replace(regex, '$1'); // Placeholder for highlighting
@@ -165,7 +175,7 @@ export function highlightMatches(text: string, query: string): string {
  */
 export function debounce<T extends (...args: any[]) => any>(
 	fn: T,
-	delay: number
+	delay: number,
 ): (...args: Parameters<T>) => void {
 	let timeoutId: NodeJS.Timeout;
 
