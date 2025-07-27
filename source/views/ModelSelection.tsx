@@ -347,7 +347,8 @@ export default function ModelSelection({
 					</Text>
 					<Text color="yellow">
 						Provider: {displayModels[selectedIndex]!.providerName}
-						{displayModels[selectedIndex]!.providerId === 'ollama' && ' • Local'}
+						{displayModels[selectedIndex]!.providerId === 'ollama' &&
+							' • Local'}
 					</Text>
 					<Text color="magenta">
 						Model ID: {displayModels[selectedIndex]!.id}
