@@ -4,6 +4,7 @@ import {
 	useState,
 	useCallback,
 	useEffect,
+	useRef,
 } from 'react';
 import {useInput, useApp} from 'ink';
 import {AppState} from '../../entities/state.js';
@@ -15,6 +16,7 @@ import {
 	AgentResponse,
 } from '../../utils/agent.js';
 import {promises as fs} from 'fs';
+import {InputHandler} from '../../utils/inputHandler.js';
 
 const configManager = getConfigManager();
 export const AppContext = createContext({});
@@ -32,6 +34,24 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 		isProcessing: false,
 		processedEventCount: 0,
 	});
+
+	// Enhanced input handling
+	const inputHandlerRef = useRef<InputHandler>(new InputHandler());
+	const [inputState, setInputState] = useState(inputHandlerRef.current.getState());
+
+	// Subscribe to input handler changes
+	useEffect(() => {
+		const unsubscribe = inputHandlerRef.current.subscribe(setInputState);
+		return unsubscribe;
+	}, []);
+
+	// Sync input state with app state
+	useEffect(() => {
+		setState(prev => ({
+			...prev,
+			input: inputState.text,
+		}));
+	}, [inputState.text]);
 
 	// Load configuration on startup
 	useEffect(() => {
@@ -430,7 +450,7 @@ Agent is ready for interaction!
 		[exit, state.agentState, handleChatInput],
 	);
 
-	// Centralized input handling
+	// Enhanced input handling with command suggestions
 	useInput((input, key) => {
 		// Only handle input when not in specialized views
 		if (state.currentView === 'models' || state.currentView === 'api-config') {
@@ -447,22 +467,45 @@ Agent is ready for interaction!
 			return;
 		}
 
+		// Handle arrow keys for command navigation
+		if (key.upArrow || key.downArrow) {
+			const handled = inputHandlerRef.current.handleArrowKey(
+				key.upArrow ? 'up' : 'down'
+			);
+			if (handled) {
+				return; // Don't process further if arrow key was handled by suggestions
+			}
+		}
+
+		// Handle tab completion
+		if (key.tab) {
+			const completed = inputHandlerRef.current.handleTabCompletion();
+			if (completed) {
+				return; // Tab was handled by autocomplete
+			}
+		}
+
 		if (key.return) {
-			if (state.input.trim()) {
-				handleCommand(state.input).catch(console.error);
+			const currentInput = inputHandlerRef.current.getState().text.trim();
+			
+			if (currentInput) {
+				// Check if user has a command selected from suggestions
+				const selectedCommand = inputHandlerRef.current.getSelectedCommand();
+				const commandToExecute = selectedCommand || currentInput;
+				
+				inputHandlerRef.current.clear();
+				handleCommand(commandToExecute).catch(console.error);
 			}
 			return;
 		}
 
 		if (key.backspace || key.delete) {
-			setState(prev => ({
-				...prev,
-				input: prev.input.slice(0, -1),
-			}));
+			inputHandlerRef.current.handleBackspace();
 			return;
 		}
 
 		if (key.escape) {
+			inputHandlerRef.current.clear();
 			setState(prev => ({
 				...prev,
 				currentView: 'home',
@@ -472,11 +515,8 @@ Agent is ready for interaction!
 		}
 
 		// Regular character input (but not during processing)
-		if (!state.isProcessing) {
-			setState(prev => ({
-				...prev,
-				input: prev.input + input,
-			}));
+		if (!state.isProcessing && input) {
+			inputHandlerRef.current.handleCharacterInput(input);
 		}
 	});
 
@@ -488,6 +528,7 @@ Agent is ready for interaction!
 				handleBackToHome,
 				handleModelSelect,
 				handleCommand,
+				inputState,
 			}}
 		>
 			{children}
