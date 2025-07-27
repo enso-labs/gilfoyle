@@ -1,3 +1,5 @@
+import Prompt from "../config/prompt.js";
+
 export type ThreadState = {
 	thread: {
 		usage: {
@@ -65,7 +67,7 @@ export function updateSystemMessage(
 }
 
 export function getSystemMessage(state: ThreadState): string {
-	return state.thread.systemMessage || 'You are a helpful AI assistant.';
+	return state.thread.systemMessage || Prompt.DEFAULT_SYSTEM_PROMPT;
 }
 
 export function parseEvents(

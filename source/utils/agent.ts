@@ -163,10 +163,19 @@ export async function executeTools(
 	return state;
 }
 
+export function collectUsage(state: ThreadState) {
+	return {
+		prompt_tokens: state.thread.usage.prompt_tokens,
+		completion_tokens: state.thread.usage.completion_tokens,
+		total_tokens: state.thread.usage.total_tokens,
+	};
+}
+
 export async function agentLoop(
 	query: string,
 	state: ThreadState,
 	model: ChatModels = ChatModels.OPENAI_GPT_4_1_NANO,
+	ctxParser: (state: ThreadState) => string = convertStateToXML,
 ): Promise<AgentResponse> {
 	const configManager = getConfigManager();
 	const config = await configManager.load();
@@ -185,11 +194,11 @@ export async function agentLoop(
 
 	// Generate LLM response
 	const systemMessage = getSystemMessage(state);
-	const conversationHistory = convertStateToXML(state);
+	const ctxWindow = ctxParser(state);
 
 	try {
 		const llmResponse = await callModel(
-			conversationHistory,
+			ctxWindow,
 			systemMessage,
 			selectedModel,
 		);
