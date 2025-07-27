@@ -182,3 +182,4 @@ desktop.ini
 connect.lock
 typings/ 
 **/.worktrees/
+**/docs/feat/
