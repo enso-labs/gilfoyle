@@ -6,7 +6,7 @@ export const TOOL_DESC = `Available tools:
 5. "create_file" - create a new file (args: {"filepath": "path/to/file", "content": "file content"})
 6. "git_status" - check git repository status (args: {})
 7. "pwd" - get current working directory (args: {})
-8. "terminal_command" - execute terminal commands (args: {"command": "command to run", "timeout": optional_timeout_ms})`
+8. "terminal_command" - execute terminal commands (args: {"command": "command to run", "timeout": optional_timeout_ms})`;
 
 export const TOOL_PROMPT = `${TOOL_DESC}
 

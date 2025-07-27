@@ -239,7 +239,8 @@ export async function agentLoop(
 export async function initializeAgent(
 	systemPrompt?: string,
 ): Promise<ThreadState> {
-	const defaultSystemPrompt = systemPrompt || Prompt.DEFAULT_SYSTEM_PROMPT;
+	const defaultSystemPrompt =
+		systemPrompt !== undefined ? systemPrompt : Prompt.DEFAULT_SYSTEM_PROMPT;
 	return {
 		thread: {
 			usage: {

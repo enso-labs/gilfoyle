@@ -10,7 +10,10 @@ const execAsync = promisify(exec);
 // Lazy initialization of Tavily search - only create when needed
 let tavilySearch: TavilySearch | null = null;
 
-function getTavilySearch(maxResults: number = 5, topic: TopicType = 'general'): TavilySearch | null {
+function getTavilySearch(
+	maxResults: number = 5,
+	topic: TopicType = 'general',
+): TavilySearch | null {
 	if (tavilySearch) {
 		return tavilySearch;
 	}
@@ -105,12 +108,19 @@ export const tools = {
 
 			let searchResults = '';
 			const doc = new YAML.Document();
-			doc.contents = search.results.map((result: {title: string, content: string, url: string, score: number}) => ({
-				title: result.title,
-				content: result.content,
-				url: result.url,
-				score: result.score,
-			}));
+			doc.contents = search.results.map(
+				(result: {
+					title: string;
+					content: string;
+					url: string;
+					score: number;
+				}) => ({
+					title: result.title,
+					content: result.content,
+					url: result.url,
+					score: result.score,
+				}),
+			);
 			searchResults += doc.toString();
 
 			// Format the results nicely
@@ -385,8 +395,8 @@ Working tree clean - no changes to commit.`;
 
 			// Security: Check for sensitive file patterns in the command
 			// Use the same BLOCKED_FILE_PATTERNS from the file reading function
-			const sensitiveFileFound = BLOCKED_FILE_PATTERNS.some(pattern => 
-				pattern.test(command)
+			const sensitiveFileFound = BLOCKED_FILE_PATTERNS.some(pattern =>
+				pattern.test(command),
 			);
 
 			if (sensitiveFileFound) {
@@ -419,7 +429,7 @@ Working tree clean - no changes to commit.`;
 			});
 
 			const output = stdout || stderr || 'Command completed (no output)';
-			
+
 			// Truncate very long output
 			if (output.length > 5000) {
 				return `Command: ${command}
@@ -444,7 +454,7 @@ ${output}`;
 				if (error.message.includes('EACCES')) {
 					return `Permission denied: "${command}"`;
 				}
-				
+
 				// Handle command exit codes
 				if ('code' in error && typeof error.code === 'number') {
 					const stderr = 'stderr' in error ? error.stderr : '';
