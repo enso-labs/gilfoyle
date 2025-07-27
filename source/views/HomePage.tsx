@@ -1,6 +1,7 @@
 import {Box, Text} from 'ink';
 import Header from '../components/Header.js';
-import Navigation from '../components/Navigation.js';
+import SmartCommandFilter from '../components/SmartCommandFilter.js';
+import {useAppContext} from '../providers/AppProvider/index.js';
 
 type HomePageProps = {
 	name?: string;
@@ -41,6 +42,12 @@ const menuOptions = [
 ];
 
 export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
+	const {handleCommand} = useAppContext();
+
+	const handleCommandSelect = (command: any) => {
+		handleCommand(command.key);
+	};
+
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Header title="Gilfoyle" version={version} />
@@ -58,13 +65,12 @@ export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 				</Text>
 			</Box>
 
-			<Navigation options={menuOptions} />
-
-			<Box marginBottom={1}>
-				<Text color="gray" dimColor>
-					Type a command below and press Enter to execute.
-				</Text>
-			</Box>
+			<SmartCommandFilter
+				commands={menuOptions}
+				onSelect={handleCommandSelect}
+				placeholder="Search and select a command..."
+				maxResults={6}
+			/>
 		</Box>
 	);
 }
