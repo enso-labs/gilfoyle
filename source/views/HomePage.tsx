@@ -60,7 +60,7 @@ export default function HomePage({name, version = '0.3.43'}: HomePageProps) {
 
 			<Navigation options={menuOptions} />
 
-			<Box marginBottom={1}>
+			<Box>
 				<Text color="gray" dimColor>
 					Type a command below and press Enter to execute.
 				</Text>

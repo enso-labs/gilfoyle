@@ -3,6 +3,7 @@ import {Box, Text} from 'ink';
 import {getConfigManager} from '../utils/config.js';
 import {InteractiveAppProps} from '../entities/state.js';
 import {useAppContext} from '../providers/AppProvider/index.js';
+import ChatInput from './ChatInput.js';
 import {
 	HomePage,
 	ModelSelection,
@@ -80,43 +81,31 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						</Box>
 					)}
 
-					{/* Input Section */}
-					<Box borderStyle="round" borderColor="cyan" paddingX={1} marginY={1}>
-						<Text color="cyan">$ </Text>
-						<Text>{state.input}</Text>
-						<Text color="gray">_</Text>
-					</Box>
-				</>
-			)}
+									{/* Input Section */}
+				<ChatInput 
+					disabled={state.isProcessing}
+					placeholder={state.isProcessing ? 'Processing...' : 'Type a command or message...'}
+				/>
 
-			{/* Status Bar */}
-			<Box
-				borderStyle="round"
-				borderColor="blue"
-				paddingX={1}
-				flexDirection="row"
-				justifyContent="space-between"
-			>
-				<Box>
-					<Text color="blue">Status: </Text>
-					<Text color="green">{state.status}</Text>
-				</Box>
-				<Box>
-					<Text color="blue">Model: </Text>
-					<Text color="cyan">{state.selectedModel}</Text>
-				</Box>
-				{name && (
-					<Box>
-						<Text color="blue">User: </Text>
-						<Text color="magenta">{name}</Text>
-					</Box>
-				)}
-				<Box>
+				{/* Status Information */}
+				<Box flexDirection="row" justifyContent="flex-end">
 					<Text color="gray" dimColor>
-						Ctrl+C to exit
+						Status: {state.status} | Model: {state.selectedModel}
+						{name && ` | User: ${name}`} | Ctrl+C to exit
 					</Text>
 				</Box>
+			</>
+		)}
+
+		{/* Status Information for specialized views */}
+		{(state.currentView === 'models' || state.currentView === 'api-config') && (
+			<Box flexDirection="row" justifyContent="flex-end" marginTop={1}>
+				<Text color="gray" dimColor>
+					Status: {state.status} | Model: {state.selectedModel}
+					{name && ` | User: ${name}`} | Ctrl+C to exit
+				</Text>
 			</Box>
+		)}
 		</Box>
 	);
 }

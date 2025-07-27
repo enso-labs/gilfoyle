@@ -20,7 +20,6 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 
 	const [state, setState] = useState<AppState>({
 		currentView: 'home',
-		input: '',
 		history: [],
 		status: 'Loading configuration...',
 		selectedModel: ChatModels.OPENAI_GPT_4_1_NANO,
@@ -214,11 +213,10 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 		async (command: string) => {
 			const trimmedCommand = command.trim().toLowerCase();
 
-			setState(prev => ({
-				...prev,
-				history: [...prev.history, `👤 User: ${command}`],
-				input: '',
-			}));
+					setState(prev => ({
+			...prev,
+			history: [...prev.history, `👤 User: ${command}`],
+		}));
 
 			switch (trimmedCommand) {
 				case '/config':
@@ -425,35 +423,10 @@ Agent is ready for interaction!
 		[exit, state.agentState, handleChatInput],
 	);
 
-	// Centralized input handling
+	// Handle Ctrl+C for exit
 	useInput((input, key) => {
-		// Only handle input when not in specialized views
-		if (state.currentView === 'models' || state.currentView === 'api-config') {
-			return;
-		}
-
-		// Prevent input during processing
-		if (state.isProcessing && key.return) {
-			return;
-		}
-
 		if (key.ctrl && input === 'c') {
 			exit();
-			return;
-		}
-
-		if (key.return) {
-			if (state.input.trim()) {
-				handleCommand(state.input).catch(console.error);
-			}
-			return;
-		}
-
-		if (key.backspace || key.delete) {
-			setState(prev => ({
-				...prev,
-				input: prev.input.slice(0, -1),
-			}));
 			return;
 		}
 
@@ -464,14 +437,6 @@ Agent is ready for interaction!
 				status: 'Ready',
 			}));
 			return;
-		}
-
-		// Regular character input (but not during processing)
-		if (!state.isProcessing) {
-			setState(prev => ({
-				...prev,
-				input: prev.input + input,
-			}));
 		}
 	});
 
