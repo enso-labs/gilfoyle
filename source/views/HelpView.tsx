@@ -30,11 +30,9 @@ export default function HelpView() {
 			<Text color="green">exit/quit</Text>
 			<Text> Exit the application</Text>
 			<Text color="green">/config</Text>
-			<Text> Show configuration file location</Text>
+			<Text> Access configuration options and settings</Text>
 			<Text color="green">/reset-config</Text>
 			<Text> Reset configuration to defaults</Text>
-			<Text color="green">/api-config</Text>
-			<Text> Configure API keys for model providers</Text>
 			<Box marginTop={1}>
 				<Text color="gray">Press ESC to return home</Text>
 			</Box>

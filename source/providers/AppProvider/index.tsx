@@ -73,6 +73,41 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 		}));
 	}, []);
 
+	const handleNavigateToApiConfig = useCallback(() => {
+		setState(prev => ({
+			...prev,
+			currentView: 'api-config',
+			status: 'Configuring API keys',
+		}));
+	}, []);
+
+	const handleResetConfig = useCallback(async () => {
+		try {
+			await configManager.reset();
+			setState(prev => ({
+				...prev,
+				selectedModel: 'GPT-4.1 Nano',
+				status: 'Configuration reset to defaults',
+				history: [...prev.history, 'Configuration reset to defaults'],
+				agentState: undefined,
+				processedEventCount: 0,
+			}));
+		} catch (error) {
+			setState(prev => ({
+				...prev,
+				status: 'Error resetting configuration',
+			}));
+		}
+	}, []);
+
+	const handleBackToConfig = useCallback(() => {
+		setState(prev => ({
+			...prev,
+			currentView: 'config',
+			status: 'Configuration options',
+		}));
+	}, []);
+
 	const handleModelSelect = useCallback(async (model: any) => {
 		try {
 			await configManager.setSelectedModel(model.id);
@@ -213,28 +248,17 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 		async (command: string) => {
 			const trimmedCommand = command.trim().toLowerCase();
 
-					setState(prev => ({
-			...prev,
-			history: [...prev.history, `👤 User: ${command}`],
-		}));
+			setState(prev => ({
+				...prev,
+				history: [...prev.history, `👤 User: ${command}`],
+			}));
 
 			switch (trimmedCommand) {
 				case '/config':
 					setState(prev => ({
 						...prev,
-						currentView: 'home',
-						status: 'Config loaded',
-						history: [
-							...prev.history,
-							`Config file: ${getConfigManager().getConfigPath()}`,
-						],
-					}));
-					break;
-				case '/api-config':
-					setState(prev => ({
-						...prev,
-						currentView: 'api-config',
-						status: 'Configuring API keys',
+						currentView: 'config',
+						status: 'Configuration options',
 					}));
 					break;
 				case '/help':
@@ -448,6 +472,9 @@ Agent is ready for interaction!
 				handleBackToHome,
 				handleModelSelect,
 				handleCommand,
+				handleNavigateToApiConfig,
+				handleResetConfig,
+				handleBackToConfig,
 			}}
 		>
 			{children}

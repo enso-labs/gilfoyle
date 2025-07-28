@@ -8,13 +8,21 @@ import {
 	HomePage,
 	ModelSelection,
 	ApiConfig,
+	ConfigView,
 	HelpView,
 	ChatView,
 	InitView,
 } from '../views/index.js';
 
 export default function InteractiveApp({name, version}: InteractiveAppProps) {
-	const {state, handleModelSelect, handleBackToHome} = useAppContext();
+	const {
+		state,
+		handleModelSelect,
+		handleBackToHome,
+		handleNavigateToApiConfig,
+		handleResetConfig,
+		handleBackToConfig,
+	} = useAppContext();
 
 	// Update user name in config if provided
 	useEffect(() => {
@@ -38,8 +46,16 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 
 	const renderCurrentView = () => {
 		switch (state.currentView) {
+			case 'config':
+				return (
+					<ConfigView
+						onBack={handleBackToHome}
+						onNavigateToApiConfig={handleNavigateToApiConfig}
+						onResetConfig={handleResetConfig}
+					/>
+				);
 			case 'api-config':
-				return <ApiConfig onBack={handleBackToHome} />;
+				return <ApiConfig onBack={handleBackToConfig} />;
 			case 'models':
 				return (
 					<ModelSelection
@@ -62,29 +78,17 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		<Box flexDirection="column">
 			{renderCurrentView()}
 
-			{/* Only show command history and input when not in specialized views */}
-			{state.currentView !== 'models' && state.currentView !== 'api-config' && (
-				<>
-					{/* Command History */}
-					{state.history.length > 0 && (
-						<Box flexDirection="column" marginY={1}>
-							<Text color="gray" bold>
-								Command History:
-							</Text>
-							<Box flexDirection="column" marginLeft={1} minHeight={5}>
-								{state.history.slice(-9).map((item: string, index: number) => (
-									<Text key={index} color="#f1f1f1" dimColor>
-										{item}
-									</Text>
-								))}
-							</Box>
-						</Box>
-					)}
-
-									{/* Input Section */}
-				<ChatInput 
+					{/* Only show input when not in specialized views */}
+		{state.currentView !== 'models' && state.currentView !== 'api-config' && state.currentView !== 'config' && (
+			<>
+				{/* Input Section */}
+				<ChatInput
 					disabled={state.isProcessing}
-					placeholder={state.isProcessing ? 'Processing...' : 'Type a command or message...'}
+					placeholder={
+						state.isProcessing
+							? 'Processing...'
+							: 'Type a command or message...'
+					}
 				/>
 
 				{/* Status Information */}
@@ -97,8 +101,10 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 			</>
 		)}
 
-		{/* Status Information for specialized views */}
-		{(state.currentView === 'models' || state.currentView === 'api-config') && (
+					{/* Status Information for specialized views */}
+		{(state.currentView === 'models' ||
+			state.currentView === 'api-config' ||
+			state.currentView === 'config') && (
 			<Box flexDirection="row" justifyContent="flex-end" marginTop={1}>
 				<Text color="gray" dimColor>
 					Status: {state.status} | Model: {state.selectedModel}
