@@ -9,7 +9,7 @@ import {
 	convertStateToXML,
 } from './memory.js';
 import {classifyIntent} from './classify.js';
-import {tools} from './tools.js';
+import {tools} from './tools/index.js';
 import {ToolIntent} from '../entities/tool.js';
 import Prompt from '../config/prompt.js';
 
