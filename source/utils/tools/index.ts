@@ -94,7 +94,7 @@ export const gitStatusTool = tool(
 	},
 );
 
-export const tools = {
+export default {
 	web_search: webSearch,
 	math_calculator: mathCalculator,
 	file_search: fileSearch,
@@ -105,7 +105,7 @@ export const tools = {
 	terminal_command: terminalCommand,
 };
 
-export const tools = [
+export const toolsArray = [
 	webSearchTool,
 	mathCalculatorTool,
 	fileSearchTool,

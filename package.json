@@ -36,7 +36,8 @@
 		"meow": "^11.0.0",
 		"react": "^19.0.0",
 		"yaml": "^2.8.0",
-		"zod": "^3.25.76"
+		"zod": "3.25.67",
+		"zod-to-json-schema": "^3.24.6"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
@@ -59,5 +60,8 @@
 		"tsx": "^4.19.2",
 		"typescript": "^5.8.3",
 		"xo": "^0.53.1"
+	},
+	"overrides": {
+		"zod": "3.25.67"
 	}
 }

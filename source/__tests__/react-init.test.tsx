@@ -104,7 +104,7 @@ describe('React Init Functionality', () => {
 			const agentState = await initializeAgent();
 
 			expect(agentState.thread.events).toHaveLength(0);
-			expect(agentState.thread.usage.total_tokens).toBe(0);
+			expect(agentState.thread.usage?.total_tokens).toBe(0);
 			expect(agentState.thread.systemMessage).toBe(
 				'You are Gilfoyle, an AI development assistant.',
 			);
