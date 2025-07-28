@@ -12,11 +12,9 @@ export function mathCalculator({expression}: {expression: string}) {
 			return `Invalid characters in expression. Only numbers and basic operators (+, -, *, /, parentheses) are allowed.`;
 		}
 
-		const result = Function(
-			`"use strict"; return (${sanitizedExpression})`,
-		)();
+		const result = Function(`"use strict"; return (${sanitizedExpression})`)();
 		return `${expression} = ${result}`;
 	} catch (error) {
 		return `Error calculating "${expression}": Invalid mathematical expression.`;
 	}
-} 
+}

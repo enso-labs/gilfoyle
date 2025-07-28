@@ -45,10 +45,10 @@ export default function ConfigView({
 	const [showingLocation, setShowingLocation] = useState(false);
 	const [configPath, setConfigPath] = useState('');
 
-		const handleSelect = async () => {
+	const handleSelect = async () => {
 		const option = CONFIG_OPTIONS[selectedIndex];
 		if (!option) return;
-		
+
 		switch (option.action) {
 			case 'show-location':
 				const configManager = getConfigManager();

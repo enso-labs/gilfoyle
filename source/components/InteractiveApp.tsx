@@ -78,40 +78,42 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		<Box flexDirection="column">
 			{renderCurrentView()}
 
-					{/* Only show input when not in specialized views */}
-		{state.currentView !== 'models' && state.currentView !== 'api-config' && state.currentView !== 'config' && (
-			<>
-				{/* Input Section */}
-				<ChatInput
-					disabled={state.isProcessing}
-					placeholder={
-						state.isProcessing
-							? 'Processing...'
-							: 'Type a command or message...'
-					}
-				/>
+			{/* Only show input when not in specialized views */}
+			{state.currentView !== 'models' &&
+				state.currentView !== 'api-config' &&
+				state.currentView !== 'config' && (
+					<>
+						{/* Input Section */}
+						<ChatInput
+							disabled={state.isProcessing}
+							placeholder={
+								state.isProcessing
+									? 'Processing...'
+									: 'Type a command or message...'
+							}
+						/>
 
-				{/* Status Information */}
-				<Box flexDirection="row" justifyContent="flex-end">
+						{/* Status Information */}
+						<Box flexDirection="row" justifyContent="flex-end">
+							<Text color="gray" dimColor>
+								Status: {state.status} | Model: {state.selectedModel}
+								{name && ` | User: ${name}`} | Ctrl+C to exit
+							</Text>
+						</Box>
+					</>
+				)}
+
+			{/* Status Information for specialized views */}
+			{(state.currentView === 'models' ||
+				state.currentView === 'api-config' ||
+				state.currentView === 'config') && (
+				<Box flexDirection="row" justifyContent="flex-end" marginTop={1}>
 					<Text color="gray" dimColor>
 						Status: {state.status} | Model: {state.selectedModel}
 						{name && ` | User: ${name}`} | Ctrl+C to exit
 					</Text>
 				</Box>
-			</>
-		)}
-
-					{/* Status Information for specialized views */}
-		{(state.currentView === 'models' ||
-			state.currentView === 'api-config' ||
-			state.currentView === 'config') && (
-			<Box flexDirection="row" justifyContent="flex-end" marginTop={1}>
-				<Text color="gray" dimColor>
-					Status: {state.status} | Model: {state.selectedModel}
-					{name && ` | User: ${name}`} | Ctrl+C to exit
-				</Text>
-			</Box>
-		)}
+			)}
 		</Box>
 	);
 }

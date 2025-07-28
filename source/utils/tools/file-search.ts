@@ -47,4 +47,4 @@ export async function fileSearch({
 			error instanceof Error ? error.message : 'Unknown error'
 		}`;
 	}
-} 
+}

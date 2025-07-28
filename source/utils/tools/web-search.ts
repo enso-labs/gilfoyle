@@ -2,12 +2,12 @@ import {TavilySearch, TopicType} from '@langchain/tavily';
 import YAML from 'yaml';
 
 // Lazy initialization of Tavily search - only create when needed
-let tavilySearch: TavilySearch | null = null;
+let tavilySearch: any = null;
 
 function getTavilySearch(
 	maxResults: number = 5,
 	topic: TopicType = 'general',
-): TavilySearch | null {
+): any {
 	if (tavilySearch) {
 		return tavilySearch;
 	}
@@ -95,4 +95,4 @@ Search completed successfully using Tavily web search.`;
 			error instanceof Error ? error.message : 'Search service unavailable'
 		}`;
 	}
-} 
+}

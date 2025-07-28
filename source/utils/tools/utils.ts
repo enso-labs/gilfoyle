@@ -68,4 +68,4 @@ export async function searchFiles(
 	}
 
 	return results;
-} 
+}

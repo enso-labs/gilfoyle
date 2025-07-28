@@ -14,4 +14,4 @@ export const tools = {
 	git_status: gitStatus,
 	pwd: pwd,
 	terminal_command: terminalCommand,
-}; 
+};

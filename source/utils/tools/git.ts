@@ -35,9 +35,7 @@ Working tree clean - no changes to commit.`;
 			line => !line.startsWith(' ') && !line.startsWith('??'),
 		).length;
 
-		let statusSummary = `Git status:\nBranch: ${
-			branch.trim() || 'unknown'
-		}\n`;
+		let statusSummary = `Git status:\nBranch: ${branch.trim() || 'unknown'}\n`;
 
 		if (staged > 0) statusSummary += `Staged changes: ${staged}\n`;
 		if (modified > 0) statusSummary += `Modified files: ${modified}\n`;
@@ -57,4 +55,4 @@ Working tree clean - no changes to commit.`;
 			error instanceof Error ? error.message : 'Git not available'
 		}`;
 	}
-} 
+}
