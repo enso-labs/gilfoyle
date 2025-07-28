@@ -90,7 +90,7 @@ export async function 	agentLoop(
 	state = await agentMemory('user_input', query, state);
 
 	// Tool execution - classify all tools from the input at once
-	const toolIntents = await classifyIntent(query, model.toString(), tools);
+	const [toolIntents, usage_metadata] = await classifyIntent(query, model.toString(), tools);
 
 	// Execute all identified tools
 	state = await executeTools(toolIntents, state);
@@ -115,20 +115,15 @@ export async function 	agentLoop(
 			model: model,
 		});
 
-		// Update token usage if available`
-		if (llmResponse.usage) {
-			state.thread.usage = {
-				prompt_tokens:
-					(state.thread.usage?.prompt_tokens || 0) +
-					(llmResponse.usage.prompt_tokens || 0),
-				completion_tokens:
-					(state.thread.usage?.completion_tokens || 0) +
-					(llmResponse.usage.completion_tokens || 0),
-				total_tokens:
-					(state.thread.usage?.total_tokens || 0) +
-					(llmResponse.usage.total_tokens || 0),
+		state.thread.usage = (() => {
+			const u1 = llmResponse.usage || {};
+			const u2 = usage_metadata || {};
+			return {
+				prompt_tokens: (u1.prompt_tokens || u1.input_tokens || 0) + (u2.input_tokens || u2.prompt_tokens || 0),
+				completion_tokens: (u1.completion_tokens || u1.output_tokens || 0) + (u2.output_tokens || u2.completion_tokens || 0),
+				total_tokens: (u1.total_tokens || u1.input_tokens + u1.output_tokens || 0) + (u2.total_tokens || u2.input_tokens + u2.output_tokens || 0),
 			};
-		}
+		})();
 
 		return {
 			content: responseContent,

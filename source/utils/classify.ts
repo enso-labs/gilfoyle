@@ -10,13 +10,12 @@ export async function classifyIntent(
 	query: string,
 	modelName?: string,
 	tools: Tool[] = toolsArray as Tool[],
-): Promise<ToolIntent[]> {
+): Promise<[ToolIntent[], any]> {
 	const prompt = `Analyze the following user query and identify ` +
 	`if any tools should be executed. Return a JSON array of tool intents. ` +
 	`If no tools are needed, return: [{"intent": "none", "args": {}}]
 
-### Available tools:\n
-~~~yaml
+## Available tools:\n~~~yaml
 ${tools.map((tool) => 
 	
   jsonToYaml({
@@ -59,12 +58,12 @@ Respond with only the JSON array, no additional text.`;
 			cleanContent = jsonMatch[0];
 		}
 
-		return JSON.parse(cleanContent);
+		return [JSON.parse(cleanContent), response.usage_metadata] as [ToolIntent[], any];
 	} catch (error) {
 		console.error('Failed to parse LLM response:', content);
 		console.error('Parse error:', error);
 
 		// Return a safe fallback
-		return [{intent: 'none', args: {}}];
+		return [[{intent: 'none', args: {}}], undefined];
 	}
 }
