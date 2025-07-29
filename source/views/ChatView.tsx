@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {Box, Text, useInput} from 'ink';
-import {useAppContext} from '../providers/AppProvider/index.js';
+import {useChat} from '../providers/ChatProvider/index.js';
 
 interface HistoryMessage {
 	content: string;
@@ -27,12 +27,12 @@ function truncateMessage(
 }
 
 export default function ChatView() {
-	const {state} = useAppContext();
+	const chat = useChat();
 	const [expandedMessages, setExpandedMessages] = useState<Set<number>>(
 		new Set(),
 	);
 
-	const processedHistory: HistoryMessage[] = state.history.map(
+	const processedHistory: HistoryMessage[] = chat.state.history.map(
 		(item: string, index: number) => {
 			const isExpanded = expandedMessages.has(index);
 			const {content, needsTruncation} = truncateMessage(item);
@@ -76,17 +76,17 @@ export default function ChatView() {
 			<Text color="yellow" bold>
 				Chat with Agent
 			</Text>
-			{state.agentState && (
+			{chat.state.agentState && (
 				<Box flexDirection="column">
 					<Text color="cyan">
 						Agent ready! Type your message below and press Enter.
 					</Text>
 					<Text color="gray" dimColor>
-						Token usage: {state.agentState.thread.usage.total_tokens} total
+						Token usage: {chat.state.agentState.thread.usage.total_tokens} total
 					</Text>
 				</Box>
 			)}
-			{state.isProcessing && (
+			{chat.state.isProcessing && (
 				<Box marginY={1}>
 					<Text color="yellow">🤖 Agent is thinking...</Text>
 				</Box>
