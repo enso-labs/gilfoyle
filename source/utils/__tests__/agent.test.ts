@@ -1,11 +1,10 @@
+import {ThreadState} from '../memory.js';
+import {agentLoop} from '../agent.js';
+import ChatModels from '../../config/llm.js';
+import {toolsArray} from '../tools/index.js';
+import {Tool} from 'langchain/tools';
 
-import { ThreadState } from "../memory.js";
-import { agentLoop } from "../agent.js";
-import ChatModels from "../../config/llm.js";
-import { toolsArray } from "../tools/index.js";
-import { Tool } from "langchain/tools";
-
-function handleEnv(test: boolean = false)  {
+function handleEnv(test: boolean = false) {
 	if (test) {
 		process.env['NODE_ENV'] = 'test';
 		process.env['OPENAI_API_KEY'] = 'test';
@@ -13,7 +12,6 @@ function handleEnv(test: boolean = false)  {
 		process.env['GOOGLE_API_KEY'] = 'test';
 	}
 }
-
 
 describe.skip('Agent Utilities', () => {
 	beforeAll(() => {
@@ -35,10 +33,10 @@ describe.skip('Agent Utilities', () => {
 		};
 		console.log(state);
 		const result = await agentLoop(
-			'What is current dir?', 
-			state, 
-			ChatModels.OPENAI_GPT_4_1_NANO, 
-			toolsArray as Tool[]
+			'What is current dir?',
+			state,
+			ChatModels.OPENAI_GPT_4_1_NANO,
+			toolsArray as Tool[],
 		);
 		expect(result).toBeDefined();
 		// expect(result.content).toBe('Hello');
