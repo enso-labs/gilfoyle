@@ -9,10 +9,10 @@ import {
 	convertStateToXML,
 } from './memory.js';
 import {classifyIntent} from './classify.js';
-import { toolsArray } from './tools/index.js';
+import {toolsArray} from './tools/index.js';
 import {ToolIntent} from '../entities/tool.js';
 import Prompt from '../config/prompt.js';
-import { Tool } from 'langchain/tools';
+import {Tool} from 'langchain/tools';
 
 export interface AgentResponse {
 	content: string;
@@ -79,18 +79,21 @@ export async function executeTools(
 	return state;
 }
 
-export async function 	agentLoop(
+export async function agentLoop(
 	query: string,
 	state: ThreadState,
 	model: ChatModels = ChatModels.OPENAI_GPT_4_1_NANO,
 	tools: Tool[] = toolsArray as Tool[],
 ): Promise<AgentResponse> {
-
 	// Add user input to memory
 	state = await agentMemory('user_input', query, state);
 
 	// Tool execution - classify all tools from the input at once
-	const [toolIntents, usage_metadata] = await classifyIntent(query, model.toString(), tools);
+	const [toolIntents, usage_metadata] = await classifyIntent(
+		query,
+		model.toString(),
+		tools,
+	);
 
 	// Execute all identified tools
 	state = await executeTools(toolIntents, state);
@@ -119,9 +122,15 @@ export async function 	agentLoop(
 			const u1 = llmResponse.usage || {};
 			const u2 = usage_metadata || {};
 			return {
-				prompt_tokens: (u1.prompt_tokens || u1.input_tokens || 0) + (u2.input_tokens || u2.prompt_tokens || 0),
-				completion_tokens: (u1.completion_tokens || u1.output_tokens || 0) + (u2.output_tokens || u2.completion_tokens || 0),
-				total_tokens: (u1.total_tokens || u1.input_tokens + u1.output_tokens || 0) + (u2.total_tokens || u2.input_tokens + u2.output_tokens || 0),
+				prompt_tokens:
+					(u1.prompt_tokens || u1.input_tokens || 0) +
+					(u2.input_tokens || u2.prompt_tokens || 0),
+				completion_tokens:
+					(u1.completion_tokens || u1.output_tokens || 0) +
+					(u2.output_tokens || u2.completion_tokens || 0),
+				total_tokens:
+					(u1.total_tokens || u1.input_tokens + u1.output_tokens || 0) +
+					(u2.total_tokens || u2.input_tokens + u2.output_tokens || 0),
 			};
 		})();
 
