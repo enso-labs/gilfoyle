@@ -1,7 +1,8 @@
 import {useState, useCallback, useMemo} from 'react';
 import {Box, Text, useInput} from 'ink';
 import TextInput from 'ink-text-input';
-import {useAppContext} from '../providers/AppProvider/index.js';
+import {useCommand} from '../providers/CommandProvider/index.js';
+import {useChat} from '../providers/ChatProvider/index.js';
 
 interface ChatInputProps {
 	placeholder?: string;
@@ -25,7 +26,8 @@ export default function ChatInput({
 	placeholder = 'Type a command or message...',
 	disabled = false,
 }: ChatInputProps) {
-	const {state, handleCommand} = useAppContext();
+	const command = useCommand();
+	const chat = useChat();
 	const [localInput, setLocalInput] = useState('');
 	const [showCommands, setShowCommands] = useState(false);
 	const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -80,23 +82,23 @@ export default function ChatInput({
 
 	const handleSubmit = useCallback(
 		async (value: string) => {
-			if (value.trim() !== '' && !state.isProcessing) {
+			if (value.trim() !== '' && !chat.state.isProcessing) {
 				setLocalInput(''); // Clear input immediately for better UX
 				setShowCommands(false);
 				setSelectedCommandIndex(0);
 				try {
-					await handleCommand(value);
+					await command.processCommand(value);
 				} catch (error) {
 					console.error('Error handling command:', error);
 				}
 			}
 		},
-		[handleCommand, state.isProcessing],
+		[command.processCommand, chat.state.isProcessing],
 	);
 
 	const handleChange = useCallback(
 		(value: string) => {
-			if (!state.isProcessing) {
+			if (!chat.state.isProcessing) {
 				setLocalInput(value);
 
 				// Show commands when input starts with /
@@ -109,7 +111,7 @@ export default function ChatInput({
 				}
 			}
 		},
-		[state.isProcessing],
+		[chat.state.isProcessing],
 	);
 
 	return (
@@ -161,7 +163,7 @@ export default function ChatInput({
 					onChange={handleChange}
 					onSubmit={handleSubmit}
 					placeholder={placeholder}
-					showCursor={!disabled && !state.isProcessing}
+					showCursor={!disabled && !chat.state.isProcessing}
 				/>
 			</Box>
 		</Box>

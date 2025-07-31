@@ -2,7 +2,10 @@ import {useEffect} from 'react';
 import {Box, Text} from 'ink';
 import {getConfigManager} from '../utils/config.js';
 import {InteractiveAppProps} from '../entities/state.js';
-import {useAppContext} from '../providers/AppProvider/index.js';
+import {useNavigation} from '../providers/NavigationProvider/index.js';
+import {useConfiguration} from '../providers/ConfigurationProvider/index.js';
+import {useAppState} from '../providers/AppStateProvider/index.js';
+import {useChat} from '../providers/ChatProvider/index.js';
 import ChatInput from './ChatInput.js';
 import {
 	HomePage,
@@ -15,19 +18,15 @@ import {
 } from '../views/index.js';
 
 export default function InteractiveApp({name, version}: InteractiveAppProps) {
-	const {
-		state,
-		handleModelSelect,
-		handleBackToHome,
-		handleNavigateToApiConfig,
-		handleResetConfig,
-		handleBackToConfig,
-	} = useAppContext();
+	const navigation = useNavigation();
+	const configuration = useConfiguration();
+	const appState = useAppState();
+	const chat = useChat();
 
 	// Update user name in config if provided
 	useEffect(() => {
 		const updateUserName = async () => {
-			if (name && state.configLoaded) {
+			if (name && configuration.state.configLoaded) {
 				try {
 					const configManager = getConfigManager();
 					const config = await configManager.load();
@@ -42,25 +41,25 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 		};
 
 		updateUserName();
-	}, [name, state.configLoaded]);
+	}, [name, configuration.state.configLoaded]);
 
 	const renderCurrentView = () => {
-		switch (state.currentView) {
+		switch (navigation.state.currentView) {
 			case 'config':
 				return (
 					<ConfigView
-						onBack={handleBackToHome}
-						onNavigateToApiConfig={handleNavigateToApiConfig}
-						onResetConfig={handleResetConfig}
+						onBack={navigation.navigateToHome}
+						onNavigateToApiConfig={navigation.navigateToApiConfig}
+						onResetConfig={configuration.resetConfig}
 					/>
 				);
 			case 'api-config':
-				return <ApiConfig onBack={handleBackToConfig} />;
+				return <ApiConfig onBack={navigation.navigateToConfig} />;
 			case 'models':
 				return (
 					<ModelSelection
-						onSelect={handleModelSelect}
-						onBack={handleBackToHome}
+						onSelect={configuration.selectModel}
+						onBack={navigation.navigateToHome}
 					/>
 				);
 			case 'help':
@@ -79,15 +78,15 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 			{renderCurrentView()}
 
 			{/* Only show input when not in specialized views */}
-			{state.currentView !== 'models' &&
-				state.currentView !== 'api-config' &&
-				state.currentView !== 'config' && (
+			{navigation.state.currentView !== 'models' &&
+				navigation.state.currentView !== 'api-config' &&
+				navigation.state.currentView !== 'config' && (
 					<>
 						{/* Input Section */}
 						<ChatInput
-							disabled={state.isProcessing}
+							disabled={chat.state.isProcessing}
 							placeholder={
-								state.isProcessing
+								chat.state.isProcessing
 									? 'Processing...'
 									: 'Type a command or message...'
 							}
@@ -96,7 +95,7 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 						{/* Status Information */}
 						<Box flexDirection="row" justifyContent="flex-end">
 							<Text color="gray" dimColor>
-								Status: {state.status} | Model: {state.selectedModel}
+								Status: {appState.state.status} | Model: {configuration.state.selectedModel}
 								{name && ` | User: ${name}`} | Ctrl+C to exit
 							</Text>
 						</Box>
@@ -104,12 +103,12 @@ export default function InteractiveApp({name, version}: InteractiveAppProps) {
 				)}
 
 			{/* Status Information for specialized views */}
-			{(state.currentView === 'models' ||
-				state.currentView === 'api-config' ||
-				state.currentView === 'config') && (
+			{(navigation.state.currentView === 'models' ||
+				navigation.state.currentView === 'api-config' ||
+				navigation.state.currentView === 'config') && (
 				<Box flexDirection="row" justifyContent="flex-end" marginTop={1}>
 					<Text color="gray" dimColor>
-						Status: {state.status} | Model: {state.selectedModel}
+						Status: {appState.state.status} | Model: {configuration.state.selectedModel}
 						{name && ` | User: ${name}`} | Ctrl+C to exit
 					</Text>
 				</Box>
