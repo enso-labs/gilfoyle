@@ -24,6 +24,8 @@
 		"dist"
 	],
 	"dependencies": {
+		"@enso-labs/agent-core": "^0.0.1-rc6",
+		"@langchain/anthropic": "^0.3.26",
 		"@langchain/core": "^0.3.66",
 		"@langchain/ollama": "^0.2.3",
 		"@langchain/openai": "^0.6.2",

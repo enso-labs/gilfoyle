@@ -4,6 +4,9 @@ export class ChatModels {
 	public static readonly OPENAI_GPT_4_1_NANO = 'openai:gpt-4.1-nano';
 	public static readonly OPENAI_GPT_4_1_MINI = 'openai:gpt-4.1-mini';
 	public static readonly OPENAI_GPT_4_5 = 'openai:gpt-4.5';
+	public static readonly OPENAI_GPT_5_NANO = 'openai:gpt-5-nano';
+	public static readonly OPENAI_GPT_5_MINI = 'openai:gpt-5-mini';
+	public static readonly OPENAI_GPT_5 = 'openai:gpt-5';
 	public static readonly OPENAI_O3 = 'openai:o3';
 	// public static readonly OPENAI_O3_PRO = "openai:o3-pro";
 	public static readonly OPENAI_O4_MINI = 'openai:o4-mini';

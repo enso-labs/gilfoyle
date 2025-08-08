@@ -1,5 +1,4 @@
-import {ThreadState} from '../memory.js';
-import {agentLoop} from '../agent.js';
+import {agentLoop} from '@enso-labs/agent-core';
 import ChatModels from '../../config/llm.js';
 import {toolsArray} from '../tools/index.js';
 import {Tool} from 'langchain/tools';
@@ -21,24 +20,11 @@ describe.skip('Agent Utilities', () => {
 		handleEnv();
 	});
 	it('should be able to create an agent', async () => {
-		const state: ThreadState = {
-			thread: {
-				usage: {
-					prompt_tokens: 0,
-					completion_tokens: 0,
-					total_tokens: 0,
-				},
-				events: [],
-			},
-		};
-		console.log(state);
-		const result = await agentLoop(
-			'What is current dir?',
-			state,
-			ChatModels.OPENAI_GPT_4_1_NANO,
-			toolsArray as Tool[],
-		);
+		const result = await agentLoop({
+			prompt: 'What is current dir?',
+			model: ChatModels.OPENAI_GPT_4_1_NANO,
+			tools: toolsArray as Tool[],
+		});
 		expect(result).toBeDefined();
-		// expect(result.content).toBe('Hello');
 	});
 });

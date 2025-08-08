@@ -1,7 +1,7 @@
 import {webSearch} from './web-search.js';
 import {mathCalculator} from './math-calculator.js';
 import {fileSearch} from './file-search.js';
-import {readFile, createFile} from './file-operations.js';
+import {readFile, createFile, editFile} from './file-operations.js';
 import {gitStatus} from './git.js';
 import {pwd, terminalCommand} from './system.js';
 import {tool} from '@langchain/core/tools';
@@ -20,6 +20,16 @@ export const readFileTool = tool(readFile, {
 	description: 'Read the content of a file',
 	schema: z.object({
 		filepath: z.string().describe('The path to the file'),
+	}),
+});
+
+export const editFileTool = tool(editFile, {
+	name: 'edit_file',
+	description: 'Edit the content of a file',
+	schema: z.object({
+		filepath: z.string().describe('The path to the file'),
+		old_str: z.string().describe('The string to replace'),
+		new_str: z.string().describe('The string to replace with'),
 	}),
 });
 
@@ -75,6 +85,7 @@ export default {
 	file_search: fileSearch,
 	read_file: readFile,
 	create_file: createFile,
+	edit_file: editFile,
 	git_status: gitStatus,
 	pwd: pwd,
 	terminal_command: terminalCommand,
@@ -86,6 +97,7 @@ export const toolsArray = [
 	fileSearchTool,
 	readFileTool,
 	createFileTool,
+	editFileTool,
 	gitStatusTool,
 	pwdTool,
 	terminalCommandTool,

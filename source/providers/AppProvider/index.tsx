@@ -9,8 +9,11 @@ import {useInput, useApp} from 'ink';
 import {AppState} from '../../entities/state.js';
 import {ChatModels} from '../../config/llm.js';
 import {getConfigManager} from '../../utils/config.js';
-import {agentLoop, initializeAgent, AgentResponse} from '../../utils/agent.js';
+import {initializeAgent, AgentResponse} from '../../utils/agent.js';
+import {agentLoop} from "@enso-labs/agent-core"
 import {promises as fs} from 'fs';
+import { toolsArray } from '../../utils/tools/index.js';
+import { Tool } from '@langchain/core/tools';
 
 const configManager = getConfigManager();
 export const AppContext = createContext({});
@@ -179,11 +182,12 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 
 			try {
 				const config = await configManager.load();
-				const response: AgentResponse = await agentLoop(
-					userInput,
-					agentState,
-					config.selectedModel as ChatModels,
-				);
+				const response: AgentResponse = await agentLoop({
+					prompt: userInput,
+					model: config.selectedModel as string,
+					tools: toolsArray as Tool[],
+					state: agentState,
+				});
 
 				setState(prev => {
 					// Get only the NEW events since last interaction
@@ -203,7 +207,7 @@ export default function AppProvider({children}: {children: React.ReactNode}) {
 					const newHistoryItems = [...prev.history];
 
 					// Add each new tool event individually with output
-					newToolEvents.forEach(event => {
+					newToolEvents.forEach((event: any) => {
 						const toolOutput = event.content ? ` → ${event.content}` : '';
 						newHistoryItems.push(
 							`🛠️  Tool: ${event.intent} ${event.metadata?.icon} ${toolOutput}`,
